@@ -11,6 +11,8 @@ export const ROUTES = {
   TASK_DETAIL: '/tasks/:taskId',
   TEAM: '/team',
   SETTINGS: '/settings',
+  SETTINGS_STATUSES: '/settings/statuses',
+  SETTINGS_WORKFLOW: '/settings/workflow',
   PROFILE: '/profile',
 } as const;
 

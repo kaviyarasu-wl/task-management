@@ -29,6 +29,7 @@ export interface PaginationParams {
 export type UserRole = 'owner' | 'admin' | 'member' | 'viewer';
 
 // Task status & priority
+/** @deprecated Use Status entity from @/features/statuses instead */
 export type TaskStatus = 'todo' | 'in_progress' | 'review' | 'done' | 'cancelled';
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 

@@ -31,8 +31,13 @@ export function TaskDetailModal({
 
   if (!isOpen || !task) return null;
 
+  // Check if task status is in the "closed" category (e.g., done, cancelled)
+  const isClosedStatus = typeof task.status === 'object' && task.status !== null
+    ? task.status.category === 'closed'
+    : false;
+
   const isOverdue =
-    task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'done';
+    task.dueDate && new Date(task.dueDate) < new Date() && !isClosedStatus;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">

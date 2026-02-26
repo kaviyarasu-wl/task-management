@@ -1,4 +1,9 @@
-import { TaskPriority, TaskStatus, TenantPlan, UserRole } from './api.types';
+import { TaskPriority, TenantPlan, UserRole } from './api.types';
+import type { Status } from '@/features/statuses/types/status.types';
+
+// Re-export for convenience
+export type { TaskPriority, TenantPlan, UserRole };
+export type { Status };
 
 export interface User {
   _id: string;
@@ -50,7 +55,8 @@ export interface Task {
   projectId: string;
   assigneeId?: string;
   reporterId: string;
-  status: TaskStatus;
+  status: Status; // Populated Status object
+  statusId: string; // Status ID for mutations
   priority: TaskPriority;
   dueDate?: string;
   completedAt?: string;

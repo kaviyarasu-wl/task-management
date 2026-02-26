@@ -1,28 +1,35 @@
+import { Types } from 'mongoose';
 import { TaskRepository, TaskFilters } from './task.repository';
 import { RequestContext } from '@core/context/RequestContext';
 import { ForbiddenError, NotFoundError } from '@core/errors/AppError';
 import { EventBus } from '@core/events/EventBus';
-import { ITask } from './task.model';
-import { PaginatedResult, PaginationQuery, TaskStatus, TaskPriority } from '../../types';
+import { ITask, ITaskWithStatus } from './task.model';
+import { StatusService } from '../status/status.service';
+import { TransitionService } from '../status/transition.service';
+import { PaginatedResult, PaginationQuery, TaskPriority, StatusCategory } from '../../types';
 
 export class TaskService {
   private repo: TaskRepository;
+  private statusService: StatusService;
+  private transitionService: TransitionService;
 
   constructor() {
     this.repo = new TaskRepository();
+    this.statusService = new StatusService();
+    this.transitionService = new TransitionService();
   }
 
   async list(
     filters: TaskFilters,
     query: PaginationQuery
-  ): Promise<PaginatedResult<ITask>> {
+  ): Promise<PaginatedResult<ITask | ITaskWithStatus>> {
     const { tenantId } = RequestContext.get();
-    return this.repo.findAll(tenantId, filters, query);
+    return this.repo.findAll(tenantId, filters, query, { populate: ['status'] });
   }
 
-  async getById(taskId: string): Promise<ITask> {
+  async getById(taskId: string): Promise<ITask | ITaskWithStatus> {
     const { tenantId } = RequestContext.get();
-    const task = await this.repo.findById(tenantId, taskId);
+    const task = await this.repo.findById(tenantId, taskId, { populate: ['status'] });
     if (!task) throw new NotFoundError('Task');
     return task;
   }
@@ -32,16 +39,28 @@ export class TaskService {
     description?: string;
     projectId: string;
     assigneeId?: string;
+    status?: string; // ObjectId string, optional - uses default if not provided
     priority?: TaskPriority;
     dueDate?: Date;
     tags?: string[];
-  }): Promise<ITask> {
+  }): Promise<ITask | ITaskWithStatus> {
     const { tenantId, userId } = RequestContext.get();
+
+    // If no status provided, use tenant's default status
+    let statusId = data.status;
+    if (!statusId) {
+      const defaultStatus = await this.statusService.getDefault();
+      statusId = defaultStatus._id.toString();
+    } else {
+      // Validate status exists and belongs to tenant
+      await this.statusService.getById(statusId);
+    }
 
     const task = await this.repo.create({
       tenantId,
       reporterId: userId,
       ...data,
+      status: statusId,
     });
 
     // EventBus decouples task creation from notifications/WebSocket
@@ -52,7 +71,9 @@ export class TaskService {
       createdBy: userId,
     });
 
-    return task;
+    // Return with populated status
+    const result = await this.repo.findById(tenantId, task.id as string, { populate: ['status'] });
+    return result as unknown as ITaskWithStatus;
   }
 
   async update(
@@ -61,26 +82,72 @@ export class TaskService {
       title?: string;
       description?: string;
       assigneeId?: string;
-      status?: TaskStatus;
+      status?: string; // ObjectId string
       priority?: TaskPriority;
       dueDate?: Date;
       tags?: string[];
     }
-  ): Promise<ITask> {
+  ): Promise<ITask | ITaskWithStatus> {
     const { tenantId, userId } = RequestContext.get();
 
-    const existing = await this.repo.findById(tenantId, taskId);
+    const existing = await this.repo.findById(tenantId, taskId, { populate: ['status'] });
     if (!existing) throw new NotFoundError('Task');
 
-    // Set completedAt when status transitions to done
-    const updateData: Partial<ITask> = { ...data };
-    if (data.status === 'done' && existing.status !== 'done') {
-      updateData.completedAt = new Date();
-    } else if (data.status && data.status !== 'done') {
-      updateData.completedAt = undefined;
+    const currentStatusId = existing.status.toString();
+    const newStatusId = data.status;
+
+    // If status is changing, validate transition
+    if (newStatusId && newStatusId !== currentStatusId) {
+      // Validate new status exists
+      const newStatus = await this.statusService.getById(newStatusId);
+
+      // Validate transition is allowed
+      await this.transitionService.validateTaskTransition(taskId, newStatusId, tenantId);
+
+      // Build update data with proper ObjectId for status
+      const { status: _statusStr, ...restData } = data;
+      const updateData: Partial<ITask> = {
+        ...restData,
+        status: new Types.ObjectId(newStatusId),
+      };
+
+      // Set completedAt when status transitions to a closed category
+      if (newStatus.category === 'closed' as StatusCategory) {
+        updateData.completedAt = new Date();
+      } else {
+        updateData.completedAt = undefined;
+      }
+
+      const updated = await this.repo.update(tenantId, taskId, updateData);
+      if (!updated) throw new NotFoundError('Task');
+
+      // Emit completion event for closed status
+      if (newStatus.category === 'closed' as StatusCategory) {
+        await EventBus.emit('task.completed', {
+          taskId,
+          tenantId,
+          completedBy: userId,
+        });
+      }
+
+      // Emit assignment event if assignee changed
+      if (data.assigneeId && data.assigneeId !== existing.assigneeId) {
+        await EventBus.emit('task.assigned', {
+          taskId,
+          tenantId,
+          assigneeId: data.assigneeId,
+          assignedBy: userId,
+        });
+      }
+
+      // Return with populated status
+      const result = await this.repo.findById(tenantId, taskId, { populate: ['status'] });
+      return result as unknown as ITaskWithStatus;
     }
 
-    const updated = await this.repo.update(tenantId, taskId, updateData);
+    // No status change - just update other fields (exclude status from data)
+    const { status: _statusStr, ...updateFields } = data;
+    const updated = await this.repo.update(tenantId, taskId, updateFields);
     if (!updated) throw new NotFoundError('Task');
 
     // Emit assignment event if assignee changed
@@ -93,16 +160,9 @@ export class TaskService {
       });
     }
 
-    // Emit completion event
-    if (data.status === 'done' && existing.status !== 'done') {
-      await EventBus.emit('task.completed', {
-        taskId,
-        tenantId,
-        completedBy: userId,
-      });
-    }
-
-    return updated;
+    // Return with populated status
+    const finalResult = await this.repo.findById(tenantId, taskId, { populate: ['status'] });
+    return finalResult as unknown as ITaskWithStatus;
   }
 
   async delete(taskId: string): Promise<void> {

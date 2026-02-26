@@ -1,44 +1,38 @@
 import { cn } from '@/shared/lib/utils';
-import type { TaskStatus } from '@/shared/types/api.types';
+import type { Status } from '@/features/statuses/types/status.types';
+import { StatusIconComponent } from '@/features/statuses';
 
 interface TaskStatusBadgeProps {
-  status: TaskStatus;
+  status: Status;
+  showIcon?: boolean;
 }
 
-const STATUS_CONFIG: Record<TaskStatus, { label: string; className: string }> = {
-  todo: {
-    label: 'To Do',
-    className: 'bg-slate-100 text-slate-700',
-  },
-  in_progress: {
-    label: 'In Progress',
-    className: 'bg-blue-100 text-blue-700',
-  },
-  review: {
-    label: 'Review',
-    className: 'bg-purple-100 text-purple-700',
-  },
-  done: {
-    label: 'Done',
-    className: 'bg-green-100 text-green-700',
-  },
-  cancelled: {
-    label: 'Cancelled',
-    className: 'bg-red-100 text-red-700',
-  },
-};
-
-export function TaskStatusBadge({ status }: TaskStatusBadgeProps) {
-  const config = STATUS_CONFIG[status];
-
+export function TaskStatusBadge({ status, showIcon = false }: TaskStatusBadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-        config.className
+        'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium'
       )}
+      style={{
+        backgroundColor: `${status.color}20`,
+        color: status.color,
+      }}
     >
-      {config.label}
+      {showIcon && (
+        <StatusIconComponent
+          icon={status.icon}
+          color={status.color}
+          className="h-3 w-3"
+        />
+      )}
+      {status.name}
     </span>
+  );
+}
+
+// Fallback for loading states
+export function TaskStatusBadgeSkeleton() {
+  return (
+    <span className="inline-flex h-5 w-16 animate-pulse rounded-full bg-muted" />
   );
 }

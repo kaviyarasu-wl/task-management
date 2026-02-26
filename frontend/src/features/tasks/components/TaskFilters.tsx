@@ -1,26 +1,19 @@
 import { X } from 'lucide-react';
-import type { TaskStatus, TaskPriority } from '@/shared/types/api.types';
+import type { TaskPriority } from '@/shared/types/api.types';
 import type { Project } from '@/shared/types/entities.types';
+import { useStatuses } from '@/features/statuses';
 import { cn } from '@/shared/lib/utils';
 
 interface TaskFiltersProps {
   projects: Project[];
   selectedProjectId?: string;
-  selectedStatus?: TaskStatus;
+  selectedStatusId?: string;
   selectedPriority?: TaskPriority;
   onProjectChange: (projectId?: string) => void;
-  onStatusChange: (status?: TaskStatus) => void;
+  onStatusChange: (statusId?: string) => void;
   onPriorityChange: (priority?: TaskPriority) => void;
   onClearAll: () => void;
 }
-
-const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
-  { value: 'todo', label: 'To Do' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'review', label: 'Review' },
-  { value: 'done', label: 'Done' },
-  { value: 'cancelled', label: 'Cancelled' },
-];
 
 const PRIORITY_OPTIONS: { value: TaskPriority; label: string }[] = [
   { value: 'low', label: 'Low' },
@@ -32,14 +25,15 @@ const PRIORITY_OPTIONS: { value: TaskPriority; label: string }[] = [
 export function TaskFilters({
   projects,
   selectedProjectId,
-  selectedStatus,
+  selectedStatusId,
   selectedPriority,
   onProjectChange,
   onStatusChange,
   onPriorityChange,
   onClearAll,
 }: TaskFiltersProps) {
-  const hasFilters = selectedProjectId || selectedStatus || selectedPriority;
+  const statuses = useStatuses();
+  const hasFilters = selectedProjectId || selectedStatusId || selectedPriority;
 
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -62,17 +56,17 @@ export function TaskFilters({
 
       {/* Status Filter */}
       <select
-        value={selectedStatus ?? ''}
-        onChange={(e) => onStatusChange((e.target.value as TaskStatus) || undefined)}
+        value={selectedStatusId ?? ''}
+        onChange={(e) => onStatusChange(e.target.value || undefined)}
         className={cn(
           'rounded-md border border-border bg-background px-3 py-2 text-sm',
           'focus:outline-none focus:ring-2 focus:ring-primary/50'
         )}
       >
         <option value="">All Statuses</option>
-        {STATUS_OPTIONS.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
+        {statuses.map((status) => (
+          <option key={status._id} value={status._id}>
+            {status.name}
           </option>
         ))}
       </select>

@@ -8,6 +8,7 @@ import { authRouter } from './api/routes/auth.routes';
 import { projectRouter } from './api/routes/project.routes';
 import { taskRouter } from './api/routes/task.routes';
 import { tenantRouter } from './api/routes/tenant.routes';
+import { statusRouter } from './api/routes/status.routes';
 import { userRouter } from './api/routes/user.routes';
 
 export async function createApp(): Promise<express.Application> {
@@ -43,6 +44,7 @@ export async function createApp(): Promise<express.Application> {
   app.use('/api/v1/tenants', tenantRouter);
   app.use('/api/v1/users', userRouter);
   app.use('/api/v1/projects', projectRouter);
+  app.use('/api/v1/status', statusRouter);
   app.use('/api/v1/tasks', taskRouter);
 
   // 404 handler

@@ -6,6 +6,7 @@ import { getRedisClient, disconnectRedis } from '@infrastructure/redis/client';
 import { initSocketServer } from '@infrastructure/websocket/socket.server';
 import { registerNotificationListeners } from './modules/notification/notification.listener';
 import { registerUserListeners } from './modules/user/listeners/user.listener';
+import { registerTenantListeners } from './modules/tenant/listeners/tenant.listener';
 import { createEmailWorker } from '@infrastructure/queue/workers/email.worker';
 import { createReminderWorker } from '@infrastructure/queue/workers/reminder.worker';
 import { emailProcessor } from '@infrastructure/queue/processors/email.processor';
@@ -20,6 +21,7 @@ async function start(): Promise<void> {
   // 2. Register all domain event listeners before routes can fire events
   registerNotificationListeners();
   registerUserListeners();
+  registerTenantListeners();
 
   // 3. Start background workers with injected processors (infra stays dumb)
   createEmailWorker(emailProcessor);

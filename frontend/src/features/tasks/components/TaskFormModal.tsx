@@ -5,6 +5,7 @@ import { X, Loader2 } from 'lucide-react';
 import type { Task } from '@/shared/types/entities.types';
 import type { Project } from '@/shared/types/entities.types';
 import type { TaskPriority } from '@/shared/types/api.types';
+import { useStatuses, useDefaultStatus } from '@/features/statuses';
 import { createTaskSchema, type CreateTaskFormData } from '../validators/task.validators';
 import { cn } from '@/shared/lib/utils';
 
@@ -15,6 +16,7 @@ interface TaskFormModalProps {
   task: Task | null;
   projects: Project[];
   isLoading?: boolean;
+  initialStatusId?: string; // For creating task in a specific column
 }
 
 const PRIORITY_OPTIONS: { value: TaskPriority; label: string }[] = [
@@ -31,7 +33,11 @@ export function TaskFormModal({
   task,
   projects,
   isLoading = false,
+  initialStatusId,
 }: TaskFormModalProps) {
+  const statuses = useStatuses();
+  const defaultStatus = useDefaultStatus();
+
   const {
     register,
     handleSubmit,
@@ -45,10 +51,15 @@ export function TaskFormModal({
   useEffect(() => {
     if (isOpen) {
       if (task) {
+        const taskStatusId = typeof task.status === 'object' && task.status !== null
+          ? task.status._id
+          : task.statusId;
+
         reset({
           title: task.title,
           description: task.description ?? '',
           projectId: task.projectId,
+          statusId: taskStatusId,
           priority: task.priority,
           dueDate: task.dueDate ? task.dueDate.split('T')[0] : '',
           tags: task.tags.join(', '),
@@ -58,13 +69,14 @@ export function TaskFormModal({
           title: '',
           description: '',
           projectId: projects[0]?._id ?? '',
+          statusId: initialStatusId ?? defaultStatus?._id ?? '',
           priority: 'medium',
           dueDate: '',
           tags: '',
         });
       }
     }
-  }, [isOpen, task, projects, reset]);
+  }, [isOpen, task, projects, reset, initialStatusId, defaultStatus]);
 
   // Close on escape key
   useEffect(() => {
@@ -144,7 +156,7 @@ export function TaskFormModal({
             />
           </div>
 
-          {/* Project & Priority */}
+          {/* Project & Status */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="projectId" className="block text-sm font-medium text-foreground">
@@ -171,6 +183,29 @@ export function TaskFormModal({
             </div>
 
             <div>
+              <label htmlFor="statusId" className="block text-sm font-medium text-foreground">
+                Status
+              </label>
+              <select
+                id="statusId"
+                {...register('statusId')}
+                className={cn(
+                  'mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm',
+                  'focus:outline-none focus:ring-2 focus:ring-primary/50'
+                )}
+              >
+                {statuses.map((status) => (
+                  <option key={status._id} value={status._id}>
+                    {status.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Priority & Due Date */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
               <label htmlFor="priority" className="block text-sm font-medium text-foreground">
                 Priority
               </label>
@@ -189,22 +224,21 @@ export function TaskFormModal({
                 ))}
               </select>
             </div>
-          </div>
 
-          {/* Due Date */}
-          <div>
-            <label htmlFor="dueDate" className="block text-sm font-medium text-foreground">
-              Due Date
-            </label>
-            <input
-              id="dueDate"
-              type="date"
-              {...register('dueDate')}
-              className={cn(
-                'mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm',
-                'focus:outline-none focus:ring-2 focus:ring-primary/50'
-              )}
-            />
+            <div>
+              <label htmlFor="dueDate" className="block text-sm font-medium text-foreground">
+                Due Date
+              </label>
+              <input
+                id="dueDate"
+                type="date"
+                {...register('dueDate')}
+                className={cn(
+                  'mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm',
+                  'focus:outline-none focus:ring-2 focus:ring-primary/50'
+                )}
+              />
+            </div>
           </div>
 
           {/* Tags */}

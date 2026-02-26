@@ -9,6 +9,12 @@ export interface EventPayloads {
   'user.invited': { userId: string; tenantId: string; email: string; role: string; invitedBy: string };
   'user.removed': { userId: string; tenantId: string; removedBy: string };
   'tenant.created': { tenantId: string; ownerId: string; plan: string };
+  'status.created': { statusId: string; tenantId: string };
+  'status.updated': { statusId: string; tenantId: string };
+  'status.deleted': { statusId: string; tenantId: string };
+  'status.reordered': { tenantId: string; statusIds: string[] };
+  'status.defaultChanged': { statusId: string; tenantId: string };
+  'status.transitionsUpdated': { statusId: string; tenantId: string; allowedTransitions: string[] };
 }
 
 export type EventName = keyof EventPayloads;

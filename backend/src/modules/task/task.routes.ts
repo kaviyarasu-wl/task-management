@@ -1,8 +1,9 @@
 import { Router, Request, Response } from 'express';
-import { authMiddleware } from '../middleware/auth.middleware';
+import { authMiddleware } from '@api/middleware/auth.middleware';
+import { validateTransition } from '@api/middleware/validateTransition.middleware';
 import { asyncWrapper } from '@core/utils/asyncWrapper';
 import { TaskService } from '@modules/task/task.service';
-import { createTaskSchema, updateTaskSchema, taskQuerySchema } from '../validators/task.validator';
+import { createTaskSchema, updateTaskSchema, taskQuerySchema } from '@api/validators/task.validator';
 
 const router = Router();
 const taskService = new TaskService();
@@ -41,6 +42,7 @@ router.post(
 
 router.patch(
   '/:id',
+  validateTransition(), // Validate status transition if status is being changed
   asyncWrapper(async (req: Request, res: Response) => {
     const input = updateTaskSchema.parse(req.body);
     const task = await taskService.update(req.params['id']!, input);

@@ -74,6 +74,31 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
     io?.to(`tenant:${tenantId}`).emit('task:deleted', { taskId });
   });
 
+  // Status events — broadcast to all users in tenant when statuses change
+  EventBus.on('status.created', async ({ statusId, tenantId }) => {
+    io?.to(`tenant:${tenantId}`).emit('status:created', { statusId });
+  });
+
+  EventBus.on('status.updated', async ({ statusId, tenantId }) => {
+    io?.to(`tenant:${tenantId}`).emit('status:updated', { statusId });
+  });
+
+  EventBus.on('status.deleted', async ({ statusId, tenantId }) => {
+    io?.to(`tenant:${tenantId}`).emit('status:deleted', { statusId });
+  });
+
+  EventBus.on('status.reordered', async ({ tenantId, statusIds }) => {
+    io?.to(`tenant:${tenantId}`).emit('status:reordered', { statusIds });
+  });
+
+  EventBus.on('status.defaultChanged', async ({ statusId, tenantId }) => {
+    io?.to(`tenant:${tenantId}`).emit('status:default-changed', { statusId });
+  });
+
+  EventBus.on('status.transitionsUpdated', async ({ statusId, tenantId, allowedTransitions }) => {
+    io?.to(`tenant:${tenantId}`).emit('status:transitions-updated', { statusId, allowedTransitions });
+  });
+
   console.log('✅ WebSocket server initialized');
   return io;
 }

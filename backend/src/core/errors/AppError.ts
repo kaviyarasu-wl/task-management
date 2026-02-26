@@ -56,3 +56,18 @@ export class TooManyRequestsError extends AppError {
     super(message, 429, 'RATE_LIMIT_EXCEEDED');
   }
 }
+
+export class TransitionNotAllowedError extends AppError {
+  public readonly fromStatus: string;
+  public readonly toStatus: string;
+
+  constructor(fromStatus: string, toStatus: string) {
+    super(
+      `Transition from "${fromStatus}" to "${toStatus}" is not allowed`,
+      400,
+      'TRANSITION_NOT_ALLOWED'
+    );
+    this.fromStatus = fromStatus;
+    this.toStatus = toStatus;
+  }
+}

@@ -1,26 +1,41 @@
-import { Task, ITask } from './task.model';
-import { PaginatedResult, PaginationQuery, TaskStatus, TaskPriority } from '../../types';
+import { Task, ITask, ITaskWithStatus } from './task.model';
+import { PaginatedResult, PaginationQuery, TaskPriority } from '../../types';
 
 export interface TaskFilters {
   projectId?: string;
   assigneeId?: string;
-  status?: TaskStatus;
+  status?: string; // ObjectId string
   priority?: TaskPriority;
   dueBefore?: Date;
 }
 
+export interface FindOptions {
+  populate?: ('status')[];
+}
+
 export class TaskRepository {
-  async findById(tenantId: string, taskId: string): Promise<ITask | null> {
-    return Task.findOne({ _id: taskId, tenantId }).exec();
+  async findById(
+    tenantId: string,
+    taskId: string,
+    options?: FindOptions
+  ): Promise<ITask | null> {
+    let queryBuilder = Task.findOne({ _id: taskId, tenantId, deletedAt: null });
+
+    if (options?.populate?.includes('status')) {
+      queryBuilder = queryBuilder.populate('status');
+    }
+
+    return queryBuilder.exec();
   }
 
   async findAll(
     tenantId: string,
     filters: TaskFilters,
-    query: PaginationQuery
-  ): Promise<PaginatedResult<ITask>> {
+    query: PaginationQuery,
+    options?: FindOptions
+  ): Promise<PaginatedResult<ITask | ITaskWithStatus>> {
     const limit = Math.min(query.limit ?? 20, 100);
-    const filter: Record<string, unknown> = { tenantId };
+    const filter: Record<string, unknown> = { tenantId, deletedAt: null };
 
     if (filters.projectId) filter['projectId'] = filters.projectId;
     if (filters.assigneeId) filter['assigneeId'] = filters.assigneeId;
@@ -29,19 +44,24 @@ export class TaskRepository {
     if (filters.dueBefore) filter['dueDate'] = { $lte: filters.dueBefore };
     if (query.cursor) filter['_id'] = { $lt: query.cursor };
 
-    const data = await Task.find(filter)
+    let queryBuilder = Task.find(filter)
       .sort({ _id: -1 })
-      .limit(limit + 1)
-      .exec();
+      .limit(limit + 1);
+
+    if (options?.populate?.includes('status')) {
+      queryBuilder = queryBuilder.populate('status');
+    }
+
+    const data = await queryBuilder.exec();
 
     const hasMore = data.length > limit;
     if (hasMore) data.pop();
 
-    const total = await Task.countDocuments({ tenantId, ...filter }).exec();
+    const total = await Task.countDocuments({ tenantId, deletedAt: null }).exec();
 
     return {
       data,
-      nextCursor: hasMore ? (data[data.length - 1]._id as string).toString() : null,
+      nextCursor: hasMore ? data[data.length - 1]._id?.toString() ?? null : null,
       total,
     };
   }
@@ -53,6 +73,7 @@ export class TaskRepository {
     projectId: string;
     reporterId: string;
     assigneeId?: string;
+    status: string; // ObjectId as string - required
     priority?: TaskPriority;
     dueDate?: Date;
     tags?: string[];

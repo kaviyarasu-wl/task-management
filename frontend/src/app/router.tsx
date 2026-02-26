@@ -7,6 +7,8 @@ import { TasksPage } from '@/pages/tasks/TasksPage';
 import { TeamPage } from '@/pages/settings/TeamPage';
 import { SettingsPage } from '@/pages/settings/SettingsPage';
 import { ProfilePage } from '@/pages/settings/ProfilePage';
+import { StatusListPage } from '@/features/statuses/components/StatusListPage';
+import { WorkflowPage } from '@/features/statuses/components/WorkflowPage';
 import { AppLayout } from '@/layouts/AppLayout';
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { ProtectedRoute, GuestRoute } from '@/features/auth';
@@ -52,6 +54,22 @@ export function AppRouter() {
           element={
             <ProtectedRoute allowedRoles={['owner', 'admin']}>
               <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.SETTINGS_STATUSES}
+          element={
+            <ProtectedRoute allowedRoles={['owner', 'admin']}>
+              <StatusListPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.SETTINGS_WORKFLOW}
+          element={
+            <ProtectedRoute allowedRoles={['owner', 'admin']}>
+              <WorkflowPage />
             </ProtectedRoute>
           }
         />
