@@ -1,0 +1,22 @@
+import { z } from 'zod';
+
+export const createTaskSchema = z.object({
+  title: z
+    .string()
+    .min(1, 'Title is required')
+    .max(200, 'Title must be less than 200 characters'),
+  description: z.string().max(2000, 'Description must be less than 2000 characters').optional(),
+  projectId: z.string().min(1, 'Project is required'),
+  priority: z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
+  dueDate: z.string().optional(),
+  tags: z.string().optional(),
+});
+
+export type CreateTaskFormData = z.infer<typeof createTaskSchema>;
+
+export const updateTaskSchema = createTaskSchema.partial().extend({
+  status: z.enum(['todo', 'in_progress', 'review', 'done', 'cancelled']).optional(),
+  assigneeId: z.string().optional(),
+});
+
+export type UpdateTaskFormData = z.infer<typeof updateTaskSchema>;
