@@ -1,9 +1,19 @@
 import { NavLink } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { mainNavItems, bottomNavItems, type NavItem } from '@/shared/constants/navigation';
+import {
+  mainNavItems,
+  bottomNavItems,
+  type NavItem,
+} from '@/shared/constants/navigation';
 import { useAuthStore } from '@/features/auth';
 import { cn } from '@/shared/lib/utils';
 import { config } from '@/shared/constants/config';
+import {
+  sidebarVariants,
+  sidebarTextVariants,
+  springTransition,
+} from '@/shared/lib/motion';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -21,46 +31,91 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   };
 
   return (
-    <aside
+    <motion.aside
       className={cn(
-        'fixed left-0 top-0 z-40 h-screen border-r border-border bg-background transition-all duration-300',
-        isCollapsed ? 'w-16' : 'w-64'
+        'fixed left-0 top-0 z-40 h-screen',
+        // Glassmorphism styling
+        'bg-background/70 dark:bg-background/50',
+        'backdrop-blur-xl',
+        'border-r border-white/20 dark:border-white/10',
+        'shadow-glass'
       )}
+      variants={sidebarVariants}
+      initial={false}
+      animate={isCollapsed ? 'collapsed' : 'expanded'}
     >
+      {/* Gradient accent line */}
+      <div
+        className="absolute top-0 right-0 w-px h-full bg-gradient-to-b from-primary/50 via-accent/30 to-transparent"
+        aria-hidden="true"
+      />
+
+      {/* Subtle inner glow */}
+      <div
+        className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none"
+        aria-hidden="true"
+      />
+
       {/* Logo */}
-      <div className="flex h-16 items-center justify-between border-b border-border px-4">
-        {!isCollapsed && (
-          <span className="text-lg font-semibold text-foreground">{config.appName}</span>
-        )}
-        <button
+      <div className="relative flex h-16 items-center justify-between border-b border-white/10 px-4">
+        <AnimatePresence mode="wait">
+          {!isCollapsed && (
+            <motion.span
+              className="text-lg font-semibold text-foreground overflow-hidden whitespace-nowrap"
+              variants={sidebarTextVariants}
+              initial="collapsed"
+              animate="expanded"
+              exit="collapsed"
+            >
+              {config.appName}
+            </motion.span>
+          )}
+        </AnimatePresence>
+        <motion.button
           onClick={onToggle}
-          className="rounded-md p-1.5 hover:bg-muted"
+          className={cn(
+            'rounded-xl p-2',
+            'bg-white/10 dark:bg-white/5',
+            'border border-white/20 dark:border-white/10',
+            'hover:bg-white/20 dark:hover:bg-white/10',
+            'transition-colors duration-200'
+          )}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          transition={springTransition}
           aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {isCollapsed ? (
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className="h-4 w-4" />
           ) : (
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-4 w-4" />
           )}
-        </button>
+        </motion.button>
       </div>
 
-      {/* Main Navigation */}
-      <nav className="flex flex-col justify-between h-[calc(100vh-4rem)] p-3">
+      {/* Navigation */}
+      <nav className="relative flex flex-col justify-between h-[calc(100vh-4rem)] p-3">
         <ul className="space-y-1">
           {filterByRole(mainNavItems).map((item) => (
-            <SidebarNavItem key={item.href} item={item} isCollapsed={isCollapsed} />
+            <SidebarNavItem
+              key={item.href}
+              item={item}
+              isCollapsed={isCollapsed}
+            />
           ))}
         </ul>
 
-        {/* Bottom Navigation */}
-        <ul className="space-y-1 border-t border-border pt-3">
+        <ul className="space-y-1 border-t border-white/10 pt-3">
           {filterByRole(bottomNavItems).map((item) => (
-            <SidebarNavItem key={item.href} item={item} isCollapsed={isCollapsed} />
+            <SidebarNavItem
+              key={item.href}
+              item={item}
+              isCollapsed={isCollapsed}
+            />
           ))}
         </ul>
       </nav>
-    </aside>
+    </motion.aside>
   );
 }
 
@@ -78,18 +133,45 @@ function SidebarNavItem({ item, isCollapsed }: SidebarNavItemProps) {
         to={item.href}
         className={({ isActive }) =>
           cn(
-            'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-            'hover:bg-muted hover:text-foreground',
+            'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium',
+            'transition-all duration-200',
             isActive
-              ? 'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground'
-              : 'text-muted-foreground',
+              ? [
+                  'bg-primary text-primary-foreground',
+                  'shadow-glow-primary',
+                ].join(' ')
+              : [
+                  'text-muted-foreground',
+                  'hover:bg-white/10 dark:hover:bg-white/5',
+                  'hover:text-foreground',
+                ].join(' '),
             isCollapsed && 'justify-center px-2'
           )
         }
         title={isCollapsed ? item.label : undefined}
       >
-        <Icon className="h-5 w-5 shrink-0" />
-        {!isCollapsed && <span>{item.label}</span>}
+        {({ isActive }) => (
+          <>
+            <motion.div
+              whileHover={{ scale: 1.1 }}
+              transition={springTransition}
+            >
+              <Icon className="h-5 w-5 shrink-0" />
+            </motion.div>
+            <AnimatePresence mode="wait">
+              {!isCollapsed && (
+                <motion.span
+                  variants={sidebarTextVariants}
+                  initial="collapsed"
+                  animate="expanded"
+                  exit="collapsed"
+                >
+                  {item.label}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </>
+        )}
       </NavLink>
     </li>
   );

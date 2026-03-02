@@ -1,14 +1,39 @@
 import { forwardRef, type HTMLAttributes } from 'react';
+import { motion, type HTMLMotionProps } from 'framer-motion';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/shared/lib/utils';
+import { cardHoverEffect, springTransition } from '@/shared/lib/motion';
 
-const cardVariants = cva('rounded-lg border bg-card text-card-foreground', {
+const cardVariants = cva('rounded-2xl transition-all duration-300', {
   variants: {
     variant: {
-      default: 'border-border',
-      elevated: 'border-border shadow-md',
-      outlined: 'border-2 border-border',
-      ghost: 'border-transparent bg-transparent',
+      default: [
+        'bg-background/80 dark:bg-background/60',
+        'border border-border/50',
+        'shadow-sm',
+      ].join(' '),
+      glass: [
+        'bg-[var(--glass-bg)]',
+        'backdrop-blur-xl',
+        'border border-[var(--glass-border)]',
+        'shadow-glass',
+      ].join(' '),
+      'glass-subtle': [
+        'bg-white/5 dark:bg-white/[0.02]',
+        'backdrop-blur-md',
+        'border border-white/10 dark:border-white/5',
+        'shadow-glass-sm',
+      ].join(' '),
+      elevated: [
+        'bg-background',
+        'border border-border/50',
+        'shadow-lg shadow-black/5 dark:shadow-black/20',
+      ].join(' '),
+      outlined: [
+        'bg-transparent',
+        'border-2 border-border',
+      ].join(' '),
+      ghost: 'bg-transparent border-transparent',
     },
     padding: {
       none: '',
@@ -16,25 +41,53 @@ const cardVariants = cva('rounded-lg border bg-card text-card-foreground', {
       md: 'p-6',
       lg: 'p-8',
     },
+    interactive: {
+      true: 'cursor-pointer',
+      false: '',
+    },
   },
   defaultVariants: {
-    variant: 'default',
+    variant: 'glass',
     padding: 'md',
+    interactive: false,
   },
 });
 
+type MotionDivProps = Omit<HTMLMotionProps<'div'>, 'children'>;
+
 interface CardProps
-  extends HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof cardVariants> {}
+  extends Omit<HTMLAttributes<HTMLDivElement>, keyof MotionDivProps>,
+    MotionDivProps,
+    VariantProps<typeof cardVariants> {
+  children?: React.ReactNode;
+}
 
 const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, variant, padding, ...props }, ref) => {
+  ({ className, variant, padding, interactive, children, ...props }, ref) => {
+    const isInteractive = interactive === true;
+
     return (
-      <div
+      <motion.div
         ref={ref}
-        className={cn(cardVariants({ variant, padding }), className)}
+        className={cn(
+          cardVariants({ variant, padding, interactive }),
+          // Add gradient overlay for glass variants
+          (variant === 'glass' || variant === 'glass-subtle') && 'relative overflow-hidden',
+          className
+        )}
+        whileHover={isInteractive ? cardHoverEffect : undefined}
+        transition={springTransition}
         {...props}
-      />
+      >
+        {/* Subtle gradient overlay for glass effect */}
+        {(variant === 'glass' || variant === 'glass-subtle') && (
+          <div
+            className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/5 pointer-events-none rounded-2xl"
+            aria-hidden="true"
+          />
+        )}
+        <div className="relative">{children}</div>
+      </motion.div>
     );
   }
 );
@@ -48,7 +101,7 @@ const CardHeader = forwardRef<HTMLDivElement, CardHeaderProps>(
     return (
       <div
         ref={ref}
-        className={cn('flex flex-col space-y-1.5', className)}
+        className={cn('flex flex-col space-y-1.5 pb-4', className)}
         {...props}
       />
     );
@@ -64,7 +117,10 @@ const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(
     return (
       <h3
         ref={ref}
-        className={cn('text-lg font-semibold leading-none tracking-tight', className)}
+        className={cn(
+          'text-xl font-semibold leading-none tracking-tight text-foreground',
+          className
+        )}
         {...props}
       />
     );
@@ -80,7 +136,7 @@ const CardDescription = forwardRef<HTMLParagraphElement, CardDescriptionProps>(
     return (
       <p
         ref={ref}
-        className={cn('text-sm text-muted-foreground', className)}
+        className={cn('text-sm text-muted-foreground/80', className)}
         {...props}
       />
     );
@@ -106,7 +162,10 @@ const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(
     return (
       <div
         ref={ref}
-        className={cn('flex items-center pt-4', className)}
+        className={cn(
+          'flex items-center pt-4 border-t border-border/30',
+          className
+        )}
         {...props}
       />
     );

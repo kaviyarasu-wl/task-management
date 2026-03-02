@@ -6,7 +6,9 @@ import {
   type ReactNode,
   type KeyboardEvent,
 } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/shared/lib/utils';
+import { fadeVariants, springTransition } from '@/shared/lib/motion';
 
 interface TabsContextValue {
   activeTab: string;
@@ -67,7 +69,13 @@ function TabsList({ children, className }: TabsListProps) {
     <div
       role="tablist"
       className={cn(
-        'inline-flex h-10 items-center justify-start gap-1 rounded-lg bg-muted p-1',
+        'inline-flex h-12 items-center justify-start gap-1 p-1',
+        // Glassmorphism styling
+        'bg-white/10 dark:bg-white/5',
+        'backdrop-blur-lg',
+        'border border-white/20 dark:border-white/10',
+        'rounded-xl',
+        'shadow-glass-sm',
         className
       )}
     >
@@ -83,7 +91,12 @@ interface TabsTriggerProps {
   className?: string;
 }
 
-function TabsTrigger({ value, children, disabled, className }: TabsTriggerProps) {
+function TabsTrigger({
+  value,
+  children,
+  disabled,
+  className,
+}: TabsTriggerProps) {
   const { activeTab, setActiveTab, baseId } = useTabsContext();
   const isActive = activeTab === value;
 
@@ -92,7 +105,9 @@ function TabsTrigger({ value, children, disabled, className }: TabsTriggerProps)
     if (!tabList) return;
 
     const tabs = Array.from(
-      tabList.querySelectorAll<HTMLButtonElement>('[role="tab"]:not([disabled])')
+      tabList.querySelectorAll<HTMLButtonElement>(
+        '[role="tab"]:not([disabled])'
+      )
     );
     const currentIndex = tabs.indexOf(event.currentTarget);
 
@@ -128,7 +143,7 @@ function TabsTrigger({ value, children, disabled, className }: TabsTriggerProps)
   };
 
   return (
-    <button
+    <motion.button
       role="tab"
       type="button"
       id={`${baseId}-tab-${value}`}
@@ -140,17 +155,41 @@ function TabsTrigger({ value, children, disabled, className }: TabsTriggerProps)
       onClick={() => setActiveTab(value)}
       onKeyDown={handleKeyDown}
       className={cn(
-        'inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all',
+        'relative inline-flex items-center justify-center whitespace-nowrap',
+        'rounded-lg px-4 py-2 text-sm font-medium',
+        'transition-all duration-200',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
         'disabled:pointer-events-none disabled:opacity-50',
         isActive
-          ? 'bg-background text-foreground shadow-sm'
+          ? 'text-foreground'
           : 'text-muted-foreground hover:text-foreground',
         className
       )}
+      whileHover={!disabled ? { scale: 1.02 } : undefined}
+      whileTap={!disabled ? { scale: 0.98 } : undefined}
+      transition={springTransition}
     >
-      {children}
-    </button>
+      {/* Active indicator background */}
+      {isActive && (
+        <motion.div
+          className={cn(
+            'absolute inset-0',
+            'bg-background/80 dark:bg-background/60',
+            'backdrop-blur-sm',
+            'rounded-lg',
+            'shadow-sm',
+            'border border-white/30 dark:border-white/10'
+          )}
+          layoutId={`${baseId}-tab-indicator`}
+          transition={{
+            type: 'spring',
+            stiffness: 500,
+            damping: 30,
+          }}
+        />
+      )}
+      <span className="relative z-10">{children}</span>
+    </motion.button>
   );
 }
 
@@ -164,21 +203,28 @@ function TabsContent({ value, children, className }: TabsContentProps) {
   const { activeTab, baseId } = useTabsContext();
   const isActive = activeTab === value;
 
-  if (!isActive) return null;
-
   return (
-    <div
-      role="tabpanel"
-      id={`${baseId}-panel-${value}`}
-      aria-labelledby={`${baseId}-tab-${value}`}
-      tabIndex={0}
-      className={cn(
-        'mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
-        className
+    <AnimatePresence mode="wait">
+      {isActive && (
+        <motion.div
+          key={value}
+          role="tabpanel"
+          id={`${baseId}-panel-${value}`}
+          aria-labelledby={`${baseId}-tab-${value}`}
+          tabIndex={0}
+          className={cn(
+            'mt-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-lg',
+            className
+          )}
+          variants={fadeVariants}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+        >
+          {children}
+        </motion.div>
       )}
-    >
-      {children}
-    </div>
+    </AnimatePresence>
   );
 }
 

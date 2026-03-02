@@ -1,9 +1,15 @@
 import { useEffect, useId, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { useFocusTrap } from '@/shared/hooks/useFocusTrap';
 import { Button } from './Button';
+import {
+  backdropVariants,
+  scaleVariants,
+  springTransition,
+} from '@/shared/lib/motion';
 
 interface ModalProps {
   isOpen: boolean;
@@ -46,7 +52,6 @@ function Modal({
     restoreFocus: true,
   });
 
-  // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
       const originalOverflow = document.body.style.overflow;
@@ -57,8 +62,6 @@ function Modal({
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   const handleOverlayClick = (event: React.MouseEvent) => {
     if (closeOnOverlayClick && event.target === event.currentTarget) {
       onClose();
@@ -66,69 +69,99 @@ function Modal({
   };
 
   const modalContent = (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      role="presentation"
-    >
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-        aria-hidden="true"
-        onClick={handleOverlayClick}
-      />
+    <AnimatePresence>
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          role="presentation"
+        >
+          {/* Backdrop with blur */}
+          <motion.div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+            variants={backdropVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            aria-hidden="true"
+            onClick={handleOverlayClick}
+          />
 
-      {/* Modal Panel */}
-      <div
-        ref={modalRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={title ? titleId : undefined}
-        aria-describedby={description ? descriptionId : undefined}
-        className={cn(
-          'relative z-50 w-full rounded-lg border border-border bg-background shadow-lg',
-          'animate-in fade-in-0 zoom-in-95',
-          sizeClasses[size]
-        )}
-      >
-        {/* Header */}
-        {(title || showCloseButton) && (
-          <div className="flex items-start justify-between border-b border-border p-4">
-            <div className="flex-1">
-              {title && (
-                <h2
-                  id={titleId}
-                  className="text-lg font-semibold text-foreground"
-                >
-                  {title}
-                </h2>
-              )}
-              {description && (
-                <p
-                  id={descriptionId}
-                  className="mt-1 text-sm text-muted-foreground"
-                >
-                  {description}
-                </p>
-              )}
-            </div>
-            {showCloseButton && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 -mr-2 -mt-1"
-                onClick={onClose}
-                aria-label="Close modal"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+          {/* Modal Panel */}
+          <motion.div
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={title ? titleId : undefined}
+            aria-describedby={description ? descriptionId : undefined}
+            className={cn(
+              'relative z-50 w-full',
+              // Glassmorphism styling
+              'bg-background/80 dark:bg-background/70',
+              'backdrop-blur-2xl',
+              'border border-white/20 dark:border-white/10',
+              'rounded-2xl',
+              'shadow-2xl shadow-black/10 dark:shadow-black/30',
+              sizeClasses[size]
             )}
-          </div>
-        )}
+            variants={scaleVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+          >
+            {/* Gradient overlay */}
+            <div
+              className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/10 via-transparent to-white/5 pointer-events-none"
+              aria-hidden="true"
+            />
 
-        {/* Content */}
-        <div className="p-4">{children}</div>
-      </div>
-    </div>
+            {/* Header */}
+            {(title || showCloseButton) && (
+              <div className="relative flex items-start justify-between border-b border-border/30 p-6">
+                <div className="flex-1 pr-8">
+                  {title && (
+                    <h2
+                      id={titleId}
+                      className="text-xl font-semibold text-foreground"
+                    >
+                      {title}
+                    </h2>
+                  )}
+                  {description && (
+                    <p
+                      id={descriptionId}
+                      className="mt-1.5 text-sm text-muted-foreground"
+                    >
+                      {description}
+                    </p>
+                  )}
+                </div>
+                {showCloseButton && (
+                  <motion.div
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    transition={springTransition}
+                    className="absolute right-4 top-4"
+                  >
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className="rounded-full hover:bg-muted/50"
+                      onClick={onClose}
+                      aria-label="Close modal"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </motion.div>
+                )}
+              </div>
+            )}
+
+            {/* Content */}
+            <div className="relative p-6">{children}</div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 
   return createPortal(modalContent, document.body);
@@ -143,7 +176,10 @@ function ModalFooter({ children, className }: ModalFooterProps) {
   return (
     <div
       className={cn(
-        'flex items-center justify-end gap-2 border-t border-border pt-4 -mx-4 -mb-4 px-4 pb-4 mt-4',
+        'flex items-center justify-end gap-3',
+        'border-t border-border/30',
+        'pt-6 -mx-6 -mb-6 px-6 pb-6 mt-6',
+        'bg-muted/20 rounded-b-2xl',
         className
       )}
     >

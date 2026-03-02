@@ -1,6 +1,8 @@
-import { forwardRef, type SelectHTMLAttributes, useId } from 'react';
+import { forwardRef, type SelectHTMLAttributes, useId, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
+import { slideUpVariants } from '@/shared/lib/motion';
 
 interface SelectOption {
   value: string;
@@ -8,7 +10,8 @@ interface SelectOption {
   disabled?: boolean;
 }
 
-interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'children'> {
+interface SelectProps
+  extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'children'> {
   label?: string;
   error?: string;
   helperText?: string;
@@ -26,6 +29,8 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
       options,
       placeholder,
       id: providedId,
+      onFocus,
+      onBlur,
       ...props
     },
     ref
@@ -35,35 +40,63 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
     const errorId = `${id}-error`;
     const helperId = `${id}-helper`;
     const hasError = Boolean(error);
+    const [isFocused, setIsFocused] = useState(false);
 
     return (
       <div className="w-full">
         {label && (
           <label
             htmlFor={id}
-            className="mb-1.5 block text-sm font-medium text-foreground"
+            className="mb-2 block text-sm font-medium text-foreground/90"
           >
             {label}
-            {props.required && <span className="ml-1 text-destructive">*</span>}
+            {props.required && (
+              <span className="ml-1 text-destructive">*</span>
+            )}
           </label>
         )}
         <div className="relative">
+          {/* Glow effect on focus */}
+          <motion.div
+            className={cn(
+              'absolute -inset-px rounded-xl pointer-events-none',
+              hasError ? 'bg-destructive/30' : 'bg-primary/30'
+            )}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isFocused ? 1 : 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ filter: 'blur(8px)' }}
+            aria-hidden="true"
+          />
+
           <select
             ref={ref}
             id={id}
             className={cn(
-              'flex h-10 w-full appearance-none rounded-md border bg-background px-3 py-2 pr-10 text-sm transition-colors',
-              'focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2',
+              'relative flex h-11 w-full appearance-none rounded-xl px-4 py-2.5 pr-10 text-sm',
+              // Glass styling
+              'bg-background/50 dark:bg-background/30',
+              'backdrop-blur-sm',
+              'border transition-all duration-200',
+              'focus:outline-none',
               'disabled:cursor-not-allowed disabled:opacity-50',
               hasError
-                ? 'border-destructive focus:ring-destructive/50'
-                : 'border-border',
+                ? 'border-destructive/50 focus:border-destructive'
+                : 'border-border/50 focus:border-primary/50',
               className
             )}
             aria-invalid={hasError}
             aria-describedby={
               hasError ? errorId : helperText ? helperId : undefined
             }
+            onFocus={(e) => {
+              setIsFocused(true);
+              onFocus?.(e);
+            }}
+            onBlur={(e) => {
+              setIsFocused(false);
+              onBlur?.(e);
+            }}
             {...props}
           >
             {placeholder && (
@@ -86,16 +119,36 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             aria-hidden="true"
           />
         </div>
-        {error && (
-          <p id={errorId} className="mt-1.5 text-sm text-destructive" role="alert">
-            {error}
-          </p>
-        )}
-        {helperText && !error && (
-          <p id={helperId} className="mt-1.5 text-sm text-muted-foreground">
-            {helperText}
-          </p>
-        )}
+
+        <AnimatePresence mode="wait">
+          {error && (
+            <motion.p
+              key="error"
+              id={errorId}
+              className="mt-2 text-sm text-destructive"
+              role="alert"
+              variants={slideUpVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              {error}
+            </motion.p>
+          )}
+          {helperText && !error && (
+            <motion.p
+              key="helper"
+              id={helperId}
+              className="mt-2 text-sm text-muted-foreground/70"
+              variants={slideUpVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              {helperText}
+            </motion.p>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
