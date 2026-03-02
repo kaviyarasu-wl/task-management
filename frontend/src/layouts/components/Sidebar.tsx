@@ -7,6 +7,7 @@ import {
   type NavItem,
 } from '@/shared/constants/navigation';
 import { useAuthStore } from '@/features/auth';
+import { useTenantSettings } from '@/features/settings/hooks/useSettings';
 import { cn } from '@/shared/lib/utils';
 import { config } from '@/shared/constants/config';
 import {
@@ -22,6 +23,7 @@ interface SidebarProps {
 
 export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const user = useAuthStore((state) => state.user);
+  const { data: tenant } = useTenantSettings();
 
   const filterByRole = (items: NavItem[]) => {
     return items.filter((item) => {
@@ -67,7 +69,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               animate="expanded"
               exit="collapsed"
             >
-              {config.appName}
+              {tenant?.data?.name ?? config.appName}
             </motion.span>
           )}
         </AnimatePresence>

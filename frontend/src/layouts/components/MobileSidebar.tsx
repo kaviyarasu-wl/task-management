@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { mainNavItems, bottomNavItems, type NavItem } from '@/shared/constants/navigation';
 import { useAuthStore } from '@/features/auth';
+import { useTenantSettings } from '@/features/settings/hooks/useSettings';
 import { cn } from '@/shared/lib/utils';
 import { config } from '@/shared/constants/config';
 
@@ -13,6 +14,7 @@ interface MobileSidebarProps {
 
 export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
   const user = useAuthStore((state) => state.user);
+  const { data: tenant } = useTenantSettings();
 
   // Lock body scroll when open
   useEffect(() => {
@@ -48,7 +50,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
       <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-background lg:hidden">
         {/* Header */}
         <div className="flex h-16 items-center justify-between border-b border-border px-4">
-          <span className="text-lg font-semibold text-foreground">{config.appName}</span>
+          <span className="text-lg font-semibold text-foreground">{tenant?.data?.name ?? config.appName}</span>
           <button
             onClick={onClose}
             className="rounded-md p-1.5 hover:bg-muted"
