@@ -18,6 +18,13 @@ export const ROUTES = {
   SETTINGS_WEBHOOKS: '/settings/webhooks',
   PROFILE: '/profile',
   REPORTS: '/reports',
+
+  // Admin routes
+  ADMIN_LOGIN: '/admin/login',
+  ADMIN: '/admin',
+  ADMIN_PLANS: '/admin/plans',
+  ADMIN_TENANTS: '/admin/tenants',
+  ADMIN_USERS: '/admin/users',
 } as const;
 
 export type RouteKey = keyof typeof ROUTES;

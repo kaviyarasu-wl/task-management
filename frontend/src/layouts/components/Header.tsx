@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, LogOut, User, ChevronDown, Clock, StopCircle } from 'lucide-react';
+import { Menu, LogOut, User, ChevronDown, Clock, StopCircle, Shield, Eye } from 'lucide-react';
 import { useAuth, useAuthStore } from '@/features/auth';
 import { ROUTES } from '@/shared/constants/routes';
 import { cn, getInitials } from '@/shared/lib/utils';
@@ -19,6 +19,9 @@ interface HeaderProps {
 export function Header({ onMenuClick }: HeaderProps) {
   const { logout } = useAuth();
   const user = useAuthStore((state) => state.user);
+  const impersonatedTenant = useAuthStore((state) => state.impersonatedTenant);
+  const isImpersonating = useAuthStore((state) => state.isImpersonating);
+  const isCurrentlyImpersonating = isImpersonating();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -108,6 +111,27 @@ export function Header({ onMenuClick }: HeaderProps) {
               <User className="h-4 w-4" />
               Profile
             </Link>
+            {user?.role === 'superadmin' && !isCurrentlyImpersonating && (
+              <Link
+                to={ROUTES.ADMIN}
+                onClick={() => setIsDropdownOpen(false)}
+                className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted"
+              >
+                <Shield className="h-4 w-4" />
+                Admin Panel
+              </Link>
+            )}
+            {isCurrentlyImpersonating && impersonatedTenant && (
+              <div className="px-4 py-2 text-sm">
+                <div className="flex items-center gap-2 text-amber-500">
+                  <Eye className="h-4 w-4" />
+                  <span>Impersonating</span>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {impersonatedTenant.name}
+                </p>
+              </div>
+            )}
             <hr className="my-1 border-border" />
             <button
               onClick={() => {

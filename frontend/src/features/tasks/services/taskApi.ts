@@ -1,6 +1,7 @@
 import { api } from '@/shared/lib/axios';
 import type { ApiResponse, PaginatedResponse, TaskPriority } from '@/shared/types/api.types';
 import type { Task } from '@/shared/types/entities.types';
+import type { RecurrencePattern } from '@/features/tasks/types/recurrence.types';
 
 export interface TaskFilters {
   projectId?: string;
@@ -20,6 +21,7 @@ export interface CreateTaskData {
   dueDate?: string;
   tags?: string[];
   assigneeId?: string;
+  recurrence?: RecurrencePattern | null;
 }
 
 export interface UpdateTaskData {
@@ -30,6 +32,7 @@ export interface UpdateTaskData {
   dueDate?: string;
   tags?: string[];
   assigneeId?: string;
+  recurrence?: RecurrencePattern | null;
 }
 
 export const taskApi = {

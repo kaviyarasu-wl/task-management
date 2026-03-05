@@ -12,6 +12,12 @@ export interface RequestContext {
   apiKeyId?: string;
   /** API key permissions - only set for API key authenticated requests */
   permissions?: ApiKeyPermission[];
+  /** Set when a superadmin is impersonating a tenant user */
+  isImpersonating?: boolean;
+  /** Original superadmin ID when impersonating */
+  originalAdminId?: string;
+  /** Impersonation log ID for audit tracking */
+  impersonationLogId?: string;
 }
 
 const storage = new AsyncLocalStorage<RequestContext>();
@@ -80,5 +86,29 @@ export const RequestContext = {
   getPermissions(): ApiKeyPermission[] | null {
     const ctx = RequestContext.getOptional();
     return ctx?.permissions ?? null;
+  },
+
+  /**
+   * Check if current request is from an impersonating superadmin
+   */
+  isImpersonating(): boolean {
+    const ctx = RequestContext.getOptional();
+    return ctx?.isImpersonating === true;
+  },
+
+  /**
+   * Get original admin ID if impersonating, null otherwise
+   */
+  getOriginalAdminId(): string | null {
+    const ctx = RequestContext.getOptional();
+    return ctx?.originalAdminId ?? null;
+  },
+
+  /**
+   * Get impersonation log ID if impersonating, null otherwise
+   */
+  getImpersonationLogId(): string | null {
+    const ctx = RequestContext.getOptional();
+    return ctx?.impersonationLogId ?? null;
   },
 };

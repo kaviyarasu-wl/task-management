@@ -3,7 +3,7 @@ import { RequestContext } from '@core/context/RequestContext';
 import { ForbiddenError, NotFoundError } from '@core/errors/AppError';
 import { EventBus } from '@core/events/EventBus';
 import { UserRole } from '../../types';
-import { ITenant } from './tenant.model';
+import { ITenant, ITenantWithPlan } from './tenant.model';
 import { IUser } from '../user/user.model';
 
 export class TenantService {
@@ -13,7 +13,7 @@ export class TenantService {
     this.repo = new TenantRepository();
   }
 
-  async getMyOrg(): Promise<ITenant> {
+  async getMyOrg(): Promise<ITenantWithPlan> {
     const { tenantId } = RequestContext.get();
     const tenant = await this.repo.findById(tenantId);
     if (!tenant) throw new NotFoundError('Organization');

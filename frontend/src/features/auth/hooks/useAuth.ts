@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { authApi } from '../services/authApi';
+import { adminAuthApi } from '@/features/admin/services/adminAuthApi';
 import { ROUTES } from '@/shared/constants/routes';
 
 export function useAuth() {
@@ -24,8 +25,20 @@ export function useAuth() {
         return;
       }
 
+      // During impersonation, the active token is a special admin JWT
+      // that won't work with standard identity endpoints. Use persisted state.
+      const isCurrentlyImpersonating = useAuthStore.getState().impersonatedTenant !== null;
+      if (isCurrentlyImpersonating) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await authApi.getMe();
+        const persistedUser = useAuthStore.getState().user;
+        const isSuperAdmin = persistedUser?.role === 'superadmin';
+        const response = isSuperAdmin
+          ? await adminAuthApi.getMe()
+          : await authApi.getMe();
         setUser(response.data);
         setLoading(false);
       } catch {
@@ -39,13 +52,18 @@ export function useAuth() {
   }, [isLoading, setLoading, setUser, clearAuth]);
 
   const logout = useCallback(async () => {
+    const isSuperAdmin = useAuthStore.getState().user?.role === 'superadmin';
     try {
-      await authApi.logout();
+      if (isSuperAdmin) {
+        await adminAuthApi.logout();
+      } else {
+        await authApi.logout();
+      }
     } catch {
       // Ignore logout errors
     } finally {
       clearAuth();
-      navigate(ROUTES.LOGIN);
+      navigate(isSuperAdmin ? ROUTES.ADMIN_LOGIN : ROUTES.LOGIN);
     }
   }, [clearAuth, navigate]);
 

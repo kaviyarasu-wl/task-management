@@ -2,7 +2,33 @@ import type { IStatusDocument } from '../modules/status/status.model';
 
 export type UserRole = 'owner' | 'admin' | 'member' | 'viewer';
 
+/**
+ * @deprecated Use dynamic plans from Plan model instead.
+ * Kept for backward compatibility during migration.
+ */
 export type TenantPlan = 'free' | 'pro' | 'enterprise';
+
+export type BillingCycle = 'monthly' | 'yearly';
+
+/**
+ * Available plan features for feature flag checks.
+ * Extend this list as new features are added.
+ */
+export const PLAN_FEATURES = [
+  'basic_tasks',
+  'basic_projects',
+  'advanced_reports',
+  'api_access',
+  'webhooks',
+  'custom_branding',
+  'sso',
+  'dedicated_support',
+  'sla_guarantee',
+  'priority_support',
+  'email_support',
+] as const;
+
+export type PlanFeature = (typeof PLAN_FEATURES)[number];
 
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 

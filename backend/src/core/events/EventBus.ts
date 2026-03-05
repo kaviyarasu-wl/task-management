@@ -40,6 +40,15 @@ export interface EventPayloads {
   // Webhook events
   'webhook.delivered': { webhookId: string; deliveryId: string; tenantId: string };
   'webhook.failed': { webhookId: string; deliveryId: string; tenantId: string; reason: string };
+  // Admin events
+  'admin.plan.created': { planId: string };
+  'admin.plan.updated': { planId: string };
+  'admin.plan.deleted': { planId: string };
+  'admin.tenant.planChanged': { tenantId: string; oldPlanId: string; newPlanId: string };
+  'admin.tenant.suspended': { tenantId: string; reason: string };
+  'admin.tenant.activated': { tenantId: string };
+  'admin.user.moved': { userId: string; oldTenantId: string; newTenantId: string };
+  'admin.user.deleted': { userId: string; email: string };
 }
 
 export type EventName = keyof EventPayloads;

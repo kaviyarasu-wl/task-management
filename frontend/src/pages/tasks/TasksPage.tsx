@@ -16,6 +16,7 @@ import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import type { Task } from '@/shared/types/entities.types';
 import type { TaskPriority } from '@/shared/types/api.types';
 import type { CreateTaskFormData } from '@/features/tasks/validators/task.validators';
+import type { RecurrencePattern } from '@/features/tasks/types/recurrence.types';
 
 export function TasksPage() {
   // View mode
@@ -104,6 +105,8 @@ export function TasksPage() {
             priority: formData.priority,
             tags,
             dueDate: formData.dueDate || undefined,
+            assigneeId: formData.assigneeId ?? undefined,
+            recurrence: (formData.recurrence as RecurrencePattern) ?? undefined,
           },
         },
         {
@@ -123,6 +126,8 @@ export function TasksPage() {
           priority: formData.priority,
           tags,
           dueDate: formData.dueDate || undefined,
+          assigneeId: formData.assigneeId ?? undefined,
+          recurrence: formData.recurrence ?? undefined,
         },
         { onSuccess: () => setIsFormOpen(false) }
       );

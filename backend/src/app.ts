@@ -20,6 +20,7 @@ import { reportsRouter } from './api/routes/reports.routes';
 import { exportRouter } from './api/routes/export.routes';
 import { webhookRouter } from './api/routes/webhook.routes';
 import { apiKeyRouter } from './api/routes/apiKey.routes';
+import { adminRoutes } from '@modules/admin/admin.routes';
 
 export async function createApp(): Promise<express.Application> {
   const app = express();
@@ -57,6 +58,11 @@ export async function createApp(): Promise<express.Application> {
   app.use('/api/v1/status', statusRouter);
   app.use('/api/v1/tasks', taskRouter);
   app.use('/api/v1/invitations', invitationRouter);
+
+  // Admin routes (separate authentication system) — must be before commentRouter
+  // because commentRouter is mounted at broad '/api/v1' and applies authMiddleware globally
+  app.use('/api/v1/admin', adminRoutes);
+
   app.use('/api/v1', commentRouter); // Comments nested under /tasks/:taskId/comments
   app.use('/api/v1/activity', activityRouter);
   app.use('/api/v1/time-entries', timeEntryRouter);

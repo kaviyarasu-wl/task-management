@@ -5,6 +5,8 @@ import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { MobileSidebar } from './components/MobileSidebar';
 import { SkipLink } from '@/shared/components/SkipLink';
+import { ImpersonationBanner } from '@/features/admin/components/ImpersonationBanner';
+import { useAuthStore } from '@/features/auth/stores/authStore';
 import { cn } from '@/shared/lib/utils';
 import { pageVariants } from '@/shared/lib/motion';
 
@@ -13,8 +15,17 @@ export function AppLayout() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const location = useLocation();
 
+  const impersonatedTenant = useAuthStore((state) => state.impersonatedTenant);
+  const isImpersonating = useAuthStore((state) => state.isImpersonating);
+  const isCurrentlyImpersonating = isImpersonating();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-violet-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      {/* Impersonation Banner - show when impersonating */}
+      {isCurrentlyImpersonating && impersonatedTenant && (
+        <ImpersonationBanner tenant={impersonatedTenant} />
+      )}
+
       {/* Animated mesh background */}
       <div
         className="fixed inset-0 bg-mesh opacity-60 dark:opacity-30 pointer-events-none"
@@ -44,11 +55,12 @@ export function AppLayout() {
         onClose={() => setIsMobileSidebarOpen(false)}
       />
 
-      {/* Main Content */}
+      {/* Main Content - add top padding when banner is shown */}
       <div
         className={cn(
           'relative flex flex-col transition-all duration-300 ease-out',
-          isSidebarCollapsed ? 'lg:pl-20' : 'lg:pl-72'
+          isSidebarCollapsed ? 'lg:pl-20' : 'lg:pl-72',
+          isCurrentlyImpersonating && 'pt-12'
         )}
       >
         <Header onMenuClick={() => setIsMobileSidebarOpen(true)} />

@@ -8,7 +8,7 @@ interface GuestRouteProps {
 }
 
 export function GuestRoute({ children }: GuestRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -20,7 +20,9 @@ export function GuestRoute({ children }: GuestRouteProps) {
   }
 
   if (isAuthenticated) {
-    const from = (location.state as { from?: { pathname: string } })?.from?.pathname || ROUTES.DASHBOARD;
+    const isSuperAdmin = user?.role === 'superadmin';
+    const defaultRedirect = isSuperAdmin ? ROUTES.ADMIN : ROUTES.DASHBOARD;
+    const from = (location.state as { from?: { pathname: string } })?.from?.pathname || defaultRedirect;
     return <Navigate to={from} replace />;
   }
 

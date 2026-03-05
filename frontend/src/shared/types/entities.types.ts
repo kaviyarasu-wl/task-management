@@ -35,6 +35,18 @@ export interface Tenant {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  planDetails?: {
+    _id: string;
+    name: string;
+    slug: string;
+    description: string;
+    projectsLimit: number;
+    usersLimit: number;
+    price: number;
+    billingCycle: 'monthly' | 'yearly';
+    features: string[];
+    isActive: boolean;
+  };
 }
 
 export interface Project {

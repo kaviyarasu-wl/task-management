@@ -8,14 +8,13 @@ import {
   GitBranch,
   Webhook,
   ChevronRight,
+  Check,
 } from 'lucide-react';
-import { useTenantSettings, useUpdateSettings } from '@/features/settings/hooks/useSettings';
+import { useTenantSettings } from '@/features/settings/hooks/useSettings';
 import { useMembers } from '@/features/users/hooks/useUsers';
 import { useProjects } from '@/features/projects/hooks/useProjects';
 import { PlanBadge } from '@/features/settings/components/PlanBadge';
 import { UsageCard } from '@/features/settings/components/UsageCard';
-import { SettingsForm } from '@/features/settings/components/SettingsForm';
-import type { SettingsFormData } from '@/features/settings/validators/settings.validators';
 import { formatDate } from '@/shared/lib/utils';
 import { ROUTES } from '@/shared/constants/routes';
 
@@ -23,15 +22,9 @@ export function SettingsPage() {
   const { data: tenantData, isLoading: isLoadingTenant } = useTenantSettings();
   const { data: membersData } = useMembers();
   const { data: projectsData } = useProjects();
-  const updateMutation = useUpdateSettings();
-
   const tenant = tenantData?.data;
   const membersCount = membersData?.data?.length ?? 0;
   const projectsCount = projectsData?.pages?.[0]?.total ?? 0;
-
-  const handleSettingsSubmit = (data: SettingsFormData) => {
-    updateMutation.mutate(data);
-  };
 
   if (isLoadingTenant) {
     return (
@@ -147,32 +140,15 @@ export function SettingsPage() {
         </div>
       </div>
 
-      {/* Settings Form */}
-      <div className="mt-6 rounded-lg border border-border bg-background p-6">
-        <h3 className="text-lg font-semibold text-foreground">Limits</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Configure resource limits for your organization
-        </p>
-
-        <div className="mt-6">
-          <SettingsForm
-            defaultValues={{
-              maxUsers: tenant.settings.maxUsers,
-              maxProjects: tenant.settings.maxProjects,
-            }}
-            onSubmit={handleSettingsSubmit}
-            isLoading={updateMutation.isPending}
-          />
-        </div>
-      </div>
-
       {/* Plan Info */}
       <div className="mt-6 rounded-lg border border-border bg-background p-6">
         <h3 className="text-lg font-semibold text-foreground">Plan Details</h3>
         <div className="mt-4 space-y-3">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Current Plan</span>
-            <span className="font-medium capitalize text-foreground">{tenant.plan}</span>
+            <span className="font-medium capitalize text-foreground">
+              {tenant.planDetails?.name ?? tenant.plan}
+            </span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Status</span>
@@ -184,9 +160,49 @@ export function SettingsPage() {
             <span className="text-muted-foreground">Organization ID</span>
             <span className="font-mono text-xs text-foreground">{tenant.tenantId}</span>
           </div>
+
+          {tenant.planDetails && (
+            <>
+              <div className="border-t border-border pt-3">
+                <h4 className="text-sm font-medium text-foreground">Plan Limits</h4>
+                <div className="mt-2 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Projects</span>
+                    <span className="font-medium text-foreground">
+                      {tenant.planDetails.projectsLimit === -1
+                        ? 'Unlimited'
+                        : tenant.planDetails.projectsLimit}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Team Members</span>
+                    <span className="font-medium text-foreground">
+                      {tenant.planDetails.usersLimit === -1
+                        ? 'Unlimited'
+                        : tenant.planDetails.usersLimit}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {tenant.planDetails.features.length > 0 && (
+                <div className="border-t border-border pt-3">
+                  <h4 className="text-sm font-medium text-foreground">Included Features</h4>
+                  <ul className="mt-2 space-y-1.5">
+                    {tenant.planDetails.features.map((feature) => (
+                      <li key={feature} className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Check className="h-4 w-4 shrink-0 text-green-500" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
-        {tenant.plan === 'free' && (
+        {(tenant.planDetails?.slug === 'free' || (!tenant.planDetails && tenant.plan === 'free')) && (
           <div className="mt-4 rounded-md bg-muted/50 p-4">
             <p className="text-sm text-muted-foreground">
               Upgrade to Pro or Enterprise for higher limits and advanced features.

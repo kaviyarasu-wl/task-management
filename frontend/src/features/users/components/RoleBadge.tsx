@@ -6,6 +6,7 @@ const ROLE_CONFIG: Record<UserRole, { label: string; className: string }> = {
   admin: { label: 'Admin', className: 'bg-blue-100 text-blue-800' },
   member: { label: 'Member', className: 'bg-green-100 text-green-800' },
   viewer: { label: 'Viewer', className: 'bg-gray-100 text-gray-800' },
+  superadmin: { label: 'Super Admin', className: 'bg-red-100 text-red-800' },
 };
 
 interface RoleBadgeProps {

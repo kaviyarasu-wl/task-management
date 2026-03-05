@@ -26,7 +26,7 @@ export interface PaginationParams {
 }
 
 // User roles
-export type UserRole = 'owner' | 'admin' | 'member' | 'viewer';
+export type UserRole = 'owner' | 'admin' | 'member' | 'viewer' | 'superadmin';
 
 // Task status & priority
 /** @deprecated Use Status entity from @/features/statuses instead */

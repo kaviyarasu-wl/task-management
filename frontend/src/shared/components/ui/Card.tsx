@@ -19,10 +19,15 @@ const cardVariants = cva('rounded-2xl transition-all duration-300', {
         'shadow-glass',
       ].join(' '),
       'glass-subtle': [
-        'bg-white/5 dark:bg-white/[0.02]',
+        'bg-white/[0.08] dark:bg-white/[0.04]',
         'backdrop-blur-md',
         'border border-white/10 dark:border-white/5',
         'shadow-glass-sm',
+      ].join(' '),
+      dark: [
+        'bg-slate-800/90',
+        'border border-slate-700/50',
+        'shadow-lg shadow-black/20',
       ].join(' '),
       elevated: [
         'bg-background',
@@ -82,7 +87,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
         {/* Subtle gradient overlay for glass effect */}
         {(variant === 'glass' || variant === 'glass-subtle') && (
           <div
-            className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/5 pointer-events-none rounded-2xl"
+            className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/[0.02] pointer-events-none rounded-2xl"
             aria-hidden="true"
           />
         )}

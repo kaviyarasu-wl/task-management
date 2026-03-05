@@ -1,10 +1,12 @@
-import { Tenant, ITenant } from './tenant.model';
+import { Tenant, ITenant, ITenantWithPlan } from './tenant.model';
 import { User, IUser } from '../user/user.model';
 import { UserRole } from '../../types';
 
 export class TenantRepository {
-  async findById(tenantId: string): Promise<ITenant | null> {
-    return Tenant.findOne({ tenantId }).exec();
+  async findById(tenantId: string): Promise<ITenantWithPlan | null> {
+    return Tenant.findOne({ tenantId })
+      .populate('planDetails')
+      .exec() as Promise<ITenantWithPlan | null>;
   }
 
   async findBySlug(slug: string): Promise<ITenant | null> {

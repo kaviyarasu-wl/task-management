@@ -18,6 +18,10 @@ const envSchema = z.object({
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
 
+  // Admin JWT (separate secrets for admin authentication)
+  JWT_ADMIN_SECRET: z.string().min(32).optional(),
+  JWT_ADMIN_EXPIRES_IN: z.string().default('1h'),
+
   // Email
   SMTP_HOST: z.string().default('localhost'),
   SMTP_PORT: z.coerce.number().default(587),

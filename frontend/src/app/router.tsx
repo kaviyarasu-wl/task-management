@@ -16,7 +16,14 @@ import { StatusListPage } from '@/features/statuses/components/StatusListPage';
 import { WorkflowPage } from '@/features/statuses/components/WorkflowPage';
 import { AppLayout } from '@/layouts/AppLayout';
 import { AuthLayout } from '@/layouts/AuthLayout';
+import { AdminLayout } from '@/layouts/AdminLayout';
 import { ProtectedRoute, GuestRoute } from '@/features/auth';
+import { AdminRoute } from '@/features/admin/components/AdminRoute';
+import { AdminLoginPage } from '@/pages/admin/AdminLoginPage';
+import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
+import { PlansPage } from '@/pages/admin/PlansPage';
+import { TenantsPage } from '@/pages/admin/TenantsPage';
+import { UsersPage } from '@/pages/admin/UsersPage';
 import { ROUTES } from '@/shared/constants/routes';
 
 export function AppRouter() {
@@ -100,6 +107,32 @@ export function AppRouter() {
           }
         />
         <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
+      </Route>
+
+      {/* Admin login */}
+      <Route element={<AuthLayout />}>
+        <Route
+          path={ROUTES.ADMIN_LOGIN}
+          element={
+            <GuestRoute>
+              <AdminLoginPage />
+            </GuestRoute>
+          }
+        />
+      </Route>
+
+      {/* Admin routes */}
+      <Route
+        element={
+          <AdminRoute>
+            <AdminLayout />
+          </AdminRoute>
+        }
+      >
+        <Route path={ROUTES.ADMIN} element={<AdminDashboardPage />} />
+        <Route path={ROUTES.ADMIN_PLANS} element={<PlansPage />} />
+        <Route path={ROUTES.ADMIN_TENANTS} element={<TenantsPage />} />
+        <Route path={ROUTES.ADMIN_USERS} element={<UsersPage />} />
       </Route>
 
       {/* Redirects */}
