@@ -4,10 +4,12 @@ import { randomUUID } from 'crypto';
 import { config } from '../../config';
 import { getRedisClient } from '@infrastructure/redis/client';
 import { AuthRepository } from './auth.repository';
-import { AuthResponse, AuthTokens, JwtAccessPayload, JwtRefreshPayload, LoginInput, RegisterInput } from './auth.types';
+import { AuthResponse, AuthTokens, JwtAccessPayload, JwtRefreshPayload, LoginInput, MfaLoginResponse, RegisterInput } from './auth.types';
 import { ConflictError, NotFoundError, UnauthorizedError } from '@core/errors/AppError';
 import { EventBus } from '@core/events/EventBus';
 import { Types } from 'mongoose';
+import { Role } from '@modules/role/role.model';
+import { SYSTEM_ROLES } from '@modules/role/permissions';
 
 const REFRESH_TOKEN_PREFIX = 'refresh:';
 const BCRYPT_ROUNDS = 12;
@@ -61,11 +63,16 @@ export class AuthService {
         plan: 'free',
       });
 
+      // Load role permissions (owner role seeded by tenant.created event)
+      const rolePermissions = await this.loadRolePermissions(tenantId, 'owner', user.roleId?.toString());
+
       const tokens = await this.generateTokens({
         userId: user.id as string,
         tenantId,
         email: user.email,
         role: 'owner',
+        rolePermissions,
+        locale: user.locale,
       });
 
       return {
@@ -86,7 +93,7 @@ export class AuthService {
     }
   }
 
-  async login(input: LoginInput): Promise<AuthResponse> {
+  async login(input: LoginInput): Promise<AuthResponse | MfaLoginResponse> {
     const tenant = await this.repo.findTenantBySlug(input.tenantSlug);
     if (!tenant) throw new NotFoundError('Organization');
 
@@ -98,11 +105,29 @@ export class AuthService {
 
     await this.repo.updateLastLogin(user.id as string);
 
+    // Check if MFA is enabled — return mfaToken instead of full tokens
+    if (user.mfaEnabled) {
+      const { MfaService } = await import('./mfa/mfa.service');
+      const mfaService = new MfaService();
+      const mfaToken = mfaService.generateMfaToken(
+        user.id as string,
+        tenant.tenantId,
+        user.email,
+        user.role
+      );
+      return { requiresMfa: true as const, mfaToken };
+    }
+
+    // Load role permissions from Role collection
+    const rolePermissions = await this.loadRolePermissions(tenant.tenantId, user.role, user.roleId?.toString());
+
     const tokens = await this.generateTokens({
       userId: user.id as string,
       tenantId: tenant.tenantId,
       email: user.email,
       role: user.role,
+      rolePermissions,
+      locale: user.locale,
     });
 
     return {
@@ -138,17 +163,47 @@ export class AuthService {
     const user = await this.repo.findUserById(payload.userId);
     if (!user) throw new UnauthorizedError('User not found');
 
+    // Reload role permissions on refresh to pick up any role changes
+    const rolePermissions = await this.loadRolePermissions(payload.tenantId, user.role, user.roleId?.toString());
+
     return this.generateTokens({
       userId: user.id as string,
       tenantId: payload.tenantId,
       email: user.email,
       role: user.role,
+      rolePermissions,
+      locale: user.locale,
     });
   }
 
   async logout(userId: string): Promise<void> {
     const redis = getRedisClient();
     await redis.del(`${REFRESH_TOKEN_PREFIX}${userId}`);
+  }
+
+  /**
+   * Load role permissions from the Role collection.
+   * If roleId is set, load by ID. Otherwise, fall back to slug matching.
+   * Returns undefined if no role found (pre-migration backward compat via SYSTEM_ROLES).
+   */
+  private async loadRolePermissions(
+    tenantId: string,
+    roleSlug: string,
+    roleId?: string
+  ): Promise<string[] | undefined> {
+    // Try loading by roleId first (post-migration)
+    if (roleId) {
+      const role = await Role.findOne({ _id: roleId, tenantId, deletedAt: null }).lean();
+      if (role) return role.permissions;
+    }
+
+    // Fall back to slug match (pre-migration or seeded roles)
+    const role = await Role.findOne({ tenantId, slug: roleSlug, deletedAt: null }).lean();
+    if (role) return role.permissions;
+
+    // Final fallback: use static SYSTEM_ROLES definition (before any seeding)
+    const systemRole = SYSTEM_ROLES[roleSlug as keyof typeof SYSTEM_ROLES];
+    return systemRole?.permissions;
   }
 
   private async generateTokens(payload: JwtAccessPayload): Promise<AuthTokens> {

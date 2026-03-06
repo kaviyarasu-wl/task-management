@@ -6,6 +6,8 @@ import {
 } from '@api/middleware/superadmin.middleware';
 import { UnauthorizedError, BadRequestError, NotFoundError } from '@core/errors/AppError';
 import bcrypt from 'bcryptjs';
+import speakeasy from 'speakeasy';
+import { decryptSecret } from '@modules/auth/mfa/mfa.encryption';
 import { CreateSuperAdminInput } from './admin.validator';
 
 const MAX_LOGIN_ATTEMPTS = 5;
@@ -74,16 +76,17 @@ export class SuperAdminAuthService {
         throw new BadRequestError('MFA code required');
       }
 
-      // TODO: Implement MFA verification using speakeasy or similar
-      // const isValidMfa = speakeasy.totp.verify({
-      //   secret: admin.mfaSecret!,
-      //   encoding: 'base32',
-      //   token: mfaCode,
-      // });
-      //
-      // if (!isValidMfa) {
-      //   throw new UnauthorizedError('Invalid MFA code');
-      // }
+      const decryptedSecret = decryptSecret(admin.mfaSecret!);
+      const isValidMfa = speakeasy.totp.verify({
+        secret: decryptedSecret,
+        encoding: 'base32',
+        token: mfaCode,
+        window: 1,
+      });
+
+      if (!isValidMfa) {
+        throw new UnauthorizedError('Invalid MFA code');
+      }
     }
 
     // Reset failed attempts and update last login

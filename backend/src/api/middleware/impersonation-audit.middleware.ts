@@ -1,6 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { RequestContext } from '@core/context/RequestContext';
 import { ImpersonationService } from '@modules/admin/impersonation.service';
+import { createLogger } from '@infrastructure/logger';
+
+const log = createLogger('ImpersonationAudit');
 
 const impersonationService = new ImpersonationService();
 
@@ -80,7 +83,7 @@ export async function impersonationAuditMiddleware(
       })
       .catch((err) => {
         // Log error but don't fail the request
-        console.error('Failed to log impersonation action:', err);
+        log.error({ err }, 'Failed to log impersonation action');
       });
   }
 
@@ -111,7 +114,7 @@ export function createImpersonationAuditMiddleware(rules: AuditRule[]) {
           bodyKeys: req.body ? Object.keys(req.body) : [],
         })
         .catch((err) => {
-          console.error('Failed to log impersonation action:', err);
+          log.error({ err }, 'Failed to log impersonation action');
         });
     }
 

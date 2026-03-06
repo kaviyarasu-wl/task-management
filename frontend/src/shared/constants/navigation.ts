@@ -12,7 +12,7 @@ import { ROUTES } from './routes';
 import type { UserRole } from '@/shared/types/api.types';
 
 export interface NavItem {
-  label: string;
+  labelKey: string;
   href: string;
   icon: LucideIcon;
   allowedRoles?: UserRole[];
@@ -20,33 +20,33 @@ export interface NavItem {
 
 export const mainNavItems: NavItem[] = [
   {
-    label: 'Dashboard',
+    labelKey: 'navigation.dashboard',
     href: ROUTES.DASHBOARD,
     icon: LayoutDashboard,
   },
   {
-    label: 'Projects',
+    labelKey: 'navigation.projects',
     href: ROUTES.PROJECTS,
     icon: FolderKanban,
   },
   {
-    label: 'Tasks',
+    labelKey: 'navigation.tasks',
     href: ROUTES.TASKS,
     icon: CheckSquare,
   },
   {
-    label: 'Calendar',
+    labelKey: 'navigation.calendar',
     href: ROUTES.CALENDAR,
     icon: Calendar,
   },
   {
-    label: 'Reports',
+    labelKey: 'navigation.reports',
     href: ROUTES.REPORTS,
     icon: FileText,
     allowedRoles: ['owner', 'admin'],
   },
   {
-    label: 'Team',
+    labelKey: 'navigation.team',
     href: ROUTES.TEAM,
     icon: Users,
   },
@@ -54,7 +54,7 @@ export const mainNavItems: NavItem[] = [
 
 export const bottomNavItems: NavItem[] = [
   {
-    label: 'Settings',
+    labelKey: 'navigation.settings',
     href: ROUTES.SETTINGS,
     icon: Settings,
     allowedRoles: ['owner', 'admin'],

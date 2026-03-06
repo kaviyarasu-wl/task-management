@@ -40,7 +40,7 @@ export function SettingsForm({ defaultValues, onSubmit, isLoading }: SettingsFor
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       {showSuccess && (
-        <div className="flex items-center gap-2 rounded-md bg-green-50 p-3 text-sm text-green-800">
+        <div className="flex items-center gap-2 rounded-md bg-green-50 dark:bg-green-900/20 p-3 text-sm text-green-800 dark:text-green-300">
           <Check className="h-4 w-4" />
           Settings updated successfully
         </div>

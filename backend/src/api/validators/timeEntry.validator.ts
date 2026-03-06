@@ -36,12 +36,12 @@ export const timeEntryQuerySchema = z.object({
   userId: z.string().regex(objectIdRegex, 'Invalid user ID').optional(),
   startedAfter: z
     .string()
-    .datetime()
+    .refine((v) => !isNaN(Date.parse(v)), 'Invalid date')
     .optional()
     .transform((v) => (v ? new Date(v) : undefined)),
   startedBefore: z
     .string()
-    .datetime()
+    .refine((v) => !isNaN(Date.parse(v)), 'Invalid date')
     .optional()
     .transform((v) => (v ? new Date(v) : undefined)),
   billable: z

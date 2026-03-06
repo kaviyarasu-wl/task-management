@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, X } from 'lucide-react';
+import { Send, X, Paperclip } from 'lucide-react';
 import { UserAvatar } from '@/shared/components/UserAvatar';
 import { useAuthStore } from '@/features/auth/stores/authStore';
+import { FileUploadZone } from '@/features/uploads';
 import type { Comment } from '../types/comment.types';
 
 interface CommentFormProps {
@@ -13,12 +14,14 @@ interface CommentFormProps {
 }
 
 export function CommentForm({
+  taskId,
   editingComment,
   onSubmit,
   onCancelEdit,
   isSubmitting = false,
 }: CommentFormProps) {
   const [content, setContent] = useState('');
+  const [isAttaching, setIsAttaching] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const user = useAuthStore((state) => state.user);
 
@@ -94,10 +97,31 @@ export function CommentForm({
           rows={2}
         />
 
+        {isAttaching && (
+          <FileUploadZone
+            entityType="comment"
+            entityId={taskId}
+            compact
+            onUploadComplete={() => setIsAttaching(false)}
+          />
+        )}
+
         <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">
-            {content.length}/5000
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">
+              {content.length}/5000
+            </span>
+            {!isEditing && (
+              <button
+                type="button"
+                onClick={() => setIsAttaching(!isAttaching)}
+                className="rounded p-1 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                title="Attach file"
+              >
+                <Paperclip className="h-4 w-4" />
+              </button>
+            )}
+          </div>
 
           <div className="flex items-center gap-2">
             {isEditing && (

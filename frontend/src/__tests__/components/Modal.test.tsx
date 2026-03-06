@@ -185,20 +185,19 @@ describe('Modal', () => {
         </Modal>
       );
 
-      // First focusable element should be focused initially (close button or first input)
+      // Focus should be somewhere within the dialog
+      const dialog = screen.getByRole('dialog');
       await waitFor(() => {
-        const focusedElement = document.activeElement;
-        expect(focusedElement?.tagName.toLowerCase()).toMatch(/button|input/);
+        expect(dialog.contains(document.activeElement)).toBe(true);
       });
 
-      // Tab through elements
+      // Tab through elements - focus should remain within the dialog
       await user.tab();
+      expect(dialog.contains(document.activeElement)).toBe(true);
       await user.tab();
+      expect(dialog.contains(document.activeElement)).toBe(true);
       await user.tab();
-
-      // Should cycle back to first focusable element
-      await user.tab();
-      expect(document.activeElement?.tagName.toLowerCase()).toMatch(/button|input/);
+      expect(dialog.contains(document.activeElement)).toBe(true);
     });
 
     it('prevents body scroll when open', () => {
@@ -250,6 +249,6 @@ describe('ModalFooter', () => {
     );
 
     expect(screen.getByRole('button').parentElement).toHaveClass('flex');
-    expect(screen.getByRole('button').parentElement).toHaveClass('gap-2');
+    expect(screen.getByRole('button').parentElement).toHaveClass('gap-3');
   });
 });

@@ -1,9 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Menu, LogOut, User, ChevronDown, Clock, StopCircle, Shield, Eye } from 'lucide-react';
 import { useAuth, useAuthStore } from '@/features/auth';
 import { ROUTES } from '@/shared/constants/routes';
 import { cn, getInitials } from '@/shared/lib/utils';
+import { ThemeToggle } from '@/features/settings/components/ThemeToggle';
+import { NotificationBell } from '@/features/notifications/components/NotificationBell';
+import { SearchBar } from '@/features/search';
 import {
   useActiveTimerSync,
   useElapsedSeconds,
@@ -17,6 +21,7 @@ interface HeaderProps {
 }
 
 export function Header({ onMenuClick }: HeaderProps) {
+  const { t } = useTranslation();
   const { logout } = useAuth();
   const user = useAuthStore((state) => state.user);
   const impersonatedTenant = useAuthStore((state) => state.impersonatedTenant);
@@ -49,13 +54,15 @@ export function Header({ onMenuClick }: HeaderProps) {
       <button
         onClick={onMenuClick}
         className="rounded-md p-2 hover:bg-muted lg:hidden"
-        aria-label="Open menu"
+        aria-label={t('openMenu')}
       >
         <Menu className="h-5 w-5" />
       </button>
 
-      {/* Spacer for desktop */}
-      <div className="hidden lg:block" />
+      {/* Search Bar - desktop */}
+      <div className="hidden lg:block flex-1 max-w-md">
+        <SearchBar />
+      </div>
 
       {/* Active Timer Indicator */}
       {isTimerRunning && (
@@ -67,12 +74,20 @@ export function Header({ onMenuClick }: HeaderProps) {
           <button
             onClick={() => stopTimer()}
             className="rounded p-1 hover:bg-destructive/10"
-            title="Stop timer"
+            title={t('stopTimer')}
           >
             <StopCircle className="h-4 w-4 text-destructive" />
           </button>
         </div>
       )}
+
+      {/* Right side actions */}
+      <div className="flex items-center gap-3">
+        {/* Theme Toggle */}
+        <ThemeToggle />
+
+        {/* Notifications */}
+        <NotificationBell />
 
       {/* User dropdown */}
       <div className="relative" ref={dropdownRef}>
@@ -109,7 +124,7 @@ export function Header({ onMenuClick }: HeaderProps) {
               className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted"
             >
               <User className="h-4 w-4" />
-              Profile
+              {t('navigation.profile')}
             </Link>
             {user?.role === 'superadmin' && !isCurrentlyImpersonating && (
               <Link
@@ -118,14 +133,14 @@ export function Header({ onMenuClick }: HeaderProps) {
                 className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted"
               >
                 <Shield className="h-4 w-4" />
-                Admin Panel
+                {t('navigation.adminPanel')}
               </Link>
             )}
             {isCurrentlyImpersonating && impersonatedTenant && (
               <div className="px-4 py-2 text-sm">
                 <div className="flex items-center gap-2 text-amber-500">
                   <Eye className="h-4 w-4" />
-                  <span>Impersonating</span>
+                  <span>{t('impersonating')}</span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {impersonatedTenant.name}
@@ -141,10 +156,11 @@ export function Header({ onMenuClick }: HeaderProps) {
               className="flex w-full items-center gap-2 px-4 py-2 text-sm text-destructive hover:bg-muted"
             >
               <LogOut className="h-4 w-4" />
-              Sign out
+              {t('actions.signOut')}
             </button>
           </div>
         )}
+      </div>
       </div>
     </header>
   );

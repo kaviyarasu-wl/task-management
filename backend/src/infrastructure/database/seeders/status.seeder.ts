@@ -1,5 +1,8 @@
 import { Status } from '@modules/status/status.model';
 import { StatusCategory, StatusIcon } from '../../../types/status.types';
+import { createLogger } from '@infrastructure/logger';
+
+const log = createLogger('StatusSeeder');
 
 /**
  * Default status configuration matching the previous hardcoded enum.
@@ -86,11 +89,11 @@ export async function seedStatusesForTenant(tenantId: string): Promise<void> {
   // Check if tenant already has statuses (idempotent)
   const existingCount = await Status.countDocuments({ tenantId });
   if (existingCount > 0) {
-    console.log(`[Status Seeder] Tenant ${tenantId} already has ${existingCount} statuses, skipping seed`);
+    log.info({ tenantId, existingCount }, 'Tenant already has statuses, skipping seed');
     return;
   }
 
-  console.log(`[Status Seeder] Seeding statuses for tenant ${tenantId}...`);
+  log.info({ tenantId }, 'Seeding statuses');
 
   // Step 1: Create statuses without transitions
   const createdStatuses = await Status.insertMany(
@@ -121,5 +124,5 @@ export async function seedStatusesForTenant(tenantId: string): Promise<void> {
 
   await Promise.all(updatePromises);
 
-  console.log(`[Status Seeder] Successfully seeded ${createdStatuses.length} statuses for tenant ${tenantId}`);
+  log.info({ tenantId, count: createdStatuses.length }, 'Successfully seeded statuses');
 }

@@ -11,12 +11,17 @@ export function ConnectionStatus({ showLabel = false, className }: ConnectionSta
   const { isConnected } = useSocket();
 
   return (
-    <div className={cn('flex items-center gap-2', className)}>
+    <div
+      className={cn('flex items-center gap-2', className)}
+      role="status"
+      aria-live="polite"
+    >
       <div
         className={cn(
           'flex h-6 w-6 items-center justify-center rounded-full',
           isConnected ? 'bg-green-100' : 'bg-red-100'
         )}
+        aria-hidden="true"
       >
         {isConnected ? (
           <Wifi className="h-3 w-3 text-green-600" />
@@ -31,6 +36,11 @@ export function ConnectionStatus({ showLabel = false, className }: ConnectionSta
             isConnected ? 'text-green-600' : 'text-red-600'
           )}
         >
+          {isConnected ? 'Connected' : 'Disconnected'}
+        </span>
+      )}
+      {!showLabel && (
+        <span className="sr-only">
           {isConnected ? 'Connected' : 'Disconnected'}
         </span>
       )}

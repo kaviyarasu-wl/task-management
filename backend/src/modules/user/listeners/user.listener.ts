@@ -1,6 +1,9 @@
 import { EventBus } from '@core/events/EventBus';
 import { getRedisClient } from '@infrastructure/redis/client';
 import { cache } from '@infrastructure/redis/cache';
+import { createLogger } from '@infrastructure/logger';
+
+const log = createLogger('UserListener');
 
 /**
  * User module listener — reacts to cross-module events via EventBus.
@@ -17,7 +20,7 @@ export function registerUserListeners(): void {
    * default preference seeding, audit log initialization.
    */
   EventBus.on('tenant.created', async ({ tenantId, ownerId, plan }) => {
-    console.log(`[UserListener] tenant.created → tenantId=${tenantId} owner=${ownerId} plan=${plan}`);
+    log.info(`[UserListener] tenant.created → tenantId=${tenantId} owner=${ownerId} plan=${plan}`);
 
     // Warm the user list cache for this new tenant so the first
     // GET /users doesn't cold-start against MongoDB
@@ -30,7 +33,7 @@ export function registerUserListeners(): void {
    * Use this hook for: audit log entry, activity feed, analytics.
    */
   EventBus.on('user.invited', async ({ userId, tenantId, email, role, invitedBy }) => {
-    console.log(
+    log.info(
       `[UserListener] user.invited → userId=${userId} email=${email} role=${role} by=${invitedBy} tenant=${tenantId}`
     );
     // Bust the tenant's user list cache so next GET /users reflects the new member
@@ -44,7 +47,7 @@ export function registerUserListeners(): void {
    * so they cannot continue making authenticated requests.
    */
   EventBus.on('user.removed', async ({ userId, tenantId, removedBy }) => {
-    console.log(
+    log.info(
       `[UserListener] user.removed → userId=${userId} tenant=${tenantId} by=${removedBy}`
     );
 
@@ -56,5 +59,5 @@ export function registerUserListeners(): void {
     await cache.delPattern(`cache:${tenantId}:users:*`);
   });
 
-  console.log('✅ User listeners registered');
+  log.info('User listeners registered');
 }

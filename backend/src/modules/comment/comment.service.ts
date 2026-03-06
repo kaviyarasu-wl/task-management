@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { CommentRepository, CommentFilters } from './comment.repository';
 import { RequestContext } from '@core/context/RequestContext';
 import { ForbiddenError, NotFoundError } from '@core/errors/AppError';
@@ -143,6 +144,45 @@ export class CommentService {
       tenantId,
       deletedBy: userId,
     });
+  }
+
+  async addAttachment(
+    commentId: string,
+    attachment: {
+      uploadId: string;
+      filename: string;
+      url: string;
+      mimetype: string;
+      size: number;
+    }
+  ): Promise<IComment> {
+    const { tenantId } = RequestContext.get();
+
+    const comment = await this.repo.findById(tenantId, commentId);
+    if (!comment) throw new NotFoundError('Comment');
+
+    const updated = await this.repo.addAttachment(tenantId, commentId, {
+      uploadId: new Types.ObjectId(attachment.uploadId),
+      filename: attachment.filename,
+      url: attachment.url,
+      mimetype: attachment.mimetype,
+      size: attachment.size,
+    });
+    if (!updated) throw new NotFoundError('Comment');
+
+    return updated;
+  }
+
+  async removeAttachment(commentId: string, uploadId: string): Promise<IComment> {
+    const { tenantId } = RequestContext.get();
+
+    const comment = await this.repo.findById(tenantId, commentId);
+    if (!comment) throw new NotFoundError('Comment');
+
+    const updated = await this.repo.removeAttachment(tenantId, commentId, uploadId);
+    if (!updated) throw new NotFoundError('Comment');
+
+    return updated;
   }
 
   /**

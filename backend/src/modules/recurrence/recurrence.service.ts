@@ -213,6 +213,7 @@ export class RecurrenceService {
         email: 'system@recurrence.internal',
         role: 'member',
         requestId: `recurrence-${recurrence.id}-${Date.now()}`,
+        locale: 'en',
       },
       async () => {
         return this.taskService.create({

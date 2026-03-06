@@ -54,6 +54,9 @@ const config: Config = {
       testEnvironment: 'node',
       moduleNameMapper,
       setupFiles: ['<rootDir>/tests/setup.ts'],
+      transform: {
+        '^.+\\.ts$': ['ts-jest', { diagnostics: false }],
+      },
     },
     {
       displayName: 'integration',
@@ -62,6 +65,9 @@ const config: Config = {
       testEnvironment: 'node',
       moduleNameMapper,
       setupFiles: ['<rootDir>/tests/setup.ts'],
+      transform: {
+        '^.+\\.ts$': ['ts-jest', { diagnostics: false }],
+      },
     },
     {
       displayName: 'e2e',
@@ -70,6 +76,9 @@ const config: Config = {
       testEnvironment: 'node',
       moduleNameMapper,
       setupFiles: ['<rootDir>/tests/setup.ts'],
+      transform: {
+        '^.+\\.ts$': ['ts-jest', { diagnostics: false }],
+      },
     },
   ],
 };

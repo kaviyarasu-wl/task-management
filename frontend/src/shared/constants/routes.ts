@@ -2,6 +2,8 @@ export const ROUTES = {
   // Auth
   LOGIN: '/login',
   REGISTER: '/register',
+  OAUTH_CALLBACK: '/auth/oauth/callback',
+  MFA_VERIFY: '/auth/mfa/verify',
   ACCEPT_INVITE: '/invite/:token',
 
   // App
@@ -16,8 +18,13 @@ export const ROUTES = {
   SETTINGS_STATUSES: '/settings/statuses',
   SETTINGS_WORKFLOW: '/settings/workflow',
   SETTINGS_WEBHOOKS: '/settings/webhooks',
+  SETTINGS_ROLES: '/settings/roles',
+  SETTINGS_AUDIT_LOG: '/settings/audit-log',
+  SETTINGS_INTEGRATIONS: '/settings/integrations',
+  INTEGRATION_OAUTH_CALLBACK: '/settings/integrations/callback',
   PROFILE: '/profile',
   REPORTS: '/reports',
+  SEARCH: '/search',
 
   // Admin routes
   ADMIN_LOGIN: '/admin/login',

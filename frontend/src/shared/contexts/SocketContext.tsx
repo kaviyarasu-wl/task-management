@@ -91,10 +91,14 @@ export function SocketProvider({ children }: SocketProviderProps) {
   );
 }
 
-export function useSocket() {
+const SOCKET_DEFAULT: SocketContextValue = {
+  socket: null,
+  isConnected: false,
+  on: () => {},
+  off: () => {},
+};
+
+export function useSocket(): SocketContextValue {
   const context = useContext(SocketContext);
-  if (!context) {
-    throw new Error('useSocket must be used within a SocketProvider');
-  }
-  return context;
+  return context ?? SOCKET_DEFAULT;
 }

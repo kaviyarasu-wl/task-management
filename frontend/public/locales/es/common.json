@@ -1,0 +1,87 @@
+{
+  "actions": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "update": "Actualizar",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "loadMore": "Cargar más",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "export": "Exportar",
+    "retry": "Reintentar",
+    "submit": "Enviar",
+    "view": "Ver",
+    "clear": "Limpiar",
+    "saveChanges": "Guardar cambios",
+    "signOut": "Cerrar sesión",
+    "enable": "Activar",
+    "disable": "Desactivar"
+  },
+  "navigation": {
+    "dashboard": "Panel",
+    "tasks": "Tareas",
+    "projects": "Proyectos",
+    "calendar": "Calendario",
+    "team": "Equipo",
+    "reports": "Informes",
+    "settings": "Configuración",
+    "profile": "Perfil",
+    "logout": "Cerrar sesión",
+    "adminPanel": "Panel de administración"
+  },
+  "status": {
+    "loading": "Cargando...",
+    "saving": "Guardando...",
+    "noResults": "No se encontraron resultados",
+    "error": "Algo salió mal",
+    "success": "Éxito",
+    "active": "Activo",
+    "inactive": "Inactivo"
+  },
+  "validation": {
+    "required": "Este campo es obligatorio",
+    "invalidEmail": "Dirección de correo electrónico inválida",
+    "minLength": "Debe tener al menos {{min}} caracteres",
+    "maxLength": "Debe tener como máximo {{max}} caracteres"
+  },
+  "confirm": {
+    "deleteTitle": "Confirmar eliminación",
+    "deleteMessage": "¿Está seguro de que desea eliminar esto? Esta acción no se puede deshacer.",
+    "unsavedChanges": "Tiene cambios sin guardar. ¿Está seguro de que desea salir?"
+  },
+  "time": {
+    "today": "Hoy",
+    "yesterday": "Ayer",
+    "daysAgo": "Hace {{count}} día",
+    "daysAgo_other": "Hace {{count}} días",
+    "justNow": "Ahora mismo",
+    "minutesAgo": "Hace {{count}} minuto",
+    "minutesAgo_other": "Hace {{count}} minutos",
+    "hoursAgo": "Hace {{count}} hora",
+    "hoursAgo_other": "Hace {{count}} horas",
+    "joined": "Se unió {{date}}"
+  },
+  "roles": {
+    "owner": "Propietario",
+    "admin": "Administrador",
+    "member": "Miembro",
+    "viewer": "Observador",
+    "superadmin": "Super administrador"
+  },
+  "pagination": {
+    "showing": "Mostrando {{from}}-{{to}} de {{total}}",
+    "page": "Página {{current}} de {{total}}"
+  },
+  "filters": "Filtros",
+  "clearFilters": "Limpiar filtros",
+  "impersonating": "Suplantando",
+  "openMenu": "Abrir menú",
+  "stopTimer": "Detener temporizador",
+  "unlimited": "Ilimitado"
+}

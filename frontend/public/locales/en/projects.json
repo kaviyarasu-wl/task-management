@@ -1,0 +1,21 @@
+{
+  "title": "Projects",
+  "create": "Create Project",
+  "edit": "Edit Project",
+  "form": {
+    "name": "Project name",
+    "namePlaceholder": "Enter project name",
+    "description": "Description",
+    "descriptionPlaceholder": "Enter project description",
+    "color": "Color"
+  },
+  "empty": {
+    "title": "No projects yet",
+    "message": "Create your first project to organize tasks"
+  },
+  "members": "{{count}} member",
+  "members_other": "{{count}} members",
+  "tasks": "{{count}} task",
+  "tasks_other": "{{count}} tasks",
+  "archived": "Archived"
+}

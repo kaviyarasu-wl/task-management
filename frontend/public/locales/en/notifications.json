@@ -1,0 +1,9 @@
+{
+  "title": "Notifications",
+  "markAllRead": "Mark all as read",
+  "empty": "No notifications",
+  "taskAssigned": "{{user}} assigned you to {{task}}",
+  "taskCompleted": "{{user}} completed {{task}}",
+  "commentMention": "{{user}} mentioned you in {{task}}",
+  "projectInvite": "{{user}} invited you to {{project}}"
+}

@@ -1,15 +1,18 @@
 import { Job } from 'bullmq';
 import { ReminderService } from '@modules/reminder/reminder.service';
+import { createLogger } from '@infrastructure/logger';
+
+const log = createLogger('ReminderProcessor');
 
 /**
  * Reminder processor — processes due reminders from the TaskReminder collection.
  * Runs on a schedule and finds all reminders that are due to be sent.
  */
 export async function reminderProcessor(job: Job): Promise<void> {
-  console.log(`[ReminderProcessor] Starting reminder check (job ${job.id})`);
+  log.info({ jobId: job.id }, 'Starting reminder check');
 
   const reminderService = new ReminderService();
   const processedCount = await reminderService.processDueReminders();
 
-  console.log(`[ReminderProcessor] Processed ${processedCount} due reminders`);
+  log.info({ jobId: job.id, processedCount }, 'Processed due reminders');
 }

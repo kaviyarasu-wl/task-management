@@ -6,6 +6,7 @@ import {
   type CreateInvitationFormData,
 } from '../validators/invitation.validators';
 import { useInvitationMutations } from '../hooks/useInvitationMutations';
+import { useRoles } from '@/features/roles';
 import { cn } from '@/shared/lib/utils';
 
 interface InviteMemberModalProps {
@@ -13,7 +14,7 @@ interface InviteMemberModalProps {
   onClose: () => void;
 }
 
-const ROLE_OPTIONS = [
+const FALLBACK_ROLE_OPTIONS = [
   { value: 'admin', label: 'Admin', description: 'Full access to settings and members' },
   { value: 'member', label: 'Member', description: 'Can create and manage tasks' },
   { value: 'viewer', label: 'Viewer', description: 'Read-only access' },
@@ -21,6 +22,8 @@ const ROLE_OPTIONS = [
 
 export function InviteMemberModal({ isOpen, onClose }: InviteMemberModalProps) {
   const { createInvitation } = useInvitationMutations();
+  const { data: roles = [] } = useRoles();
+  const assignableRoles = roles.filter((r) => r.slug !== 'owner');
 
   const {
     register,
@@ -87,25 +90,41 @@ export function InviteMemberModal({ isOpen, onClose }: InviteMemberModalProps) {
 
           <div>
             <label className="block text-sm font-medium">Role</label>
-            <div className="mt-2 space-y-2">
-              {ROLE_OPTIONS.map((option) => (
-                <label
-                  key={option.value}
-                  className="flex cursor-pointer items-start gap-3 rounded-md border border-border p-3 hover:bg-muted"
-                >
-                  <input
-                    type="radio"
-                    value={option.value}
-                    {...register('role')}
-                    className="mt-1"
-                  />
-                  <div>
-                    <div className="font-medium text-foreground">{option.label}</div>
-                    <div className="text-sm text-muted-foreground">{option.description}</div>
-                  </div>
-                </label>
-              ))}
-            </div>
+            {assignableRoles.length > 0 ? (
+              <select
+                {...register('role')}
+                className={cn(
+                  'mt-2 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm',
+                  'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary'
+                )}
+              >
+                {assignableRoles.map((role) => (
+                  <option key={role._id} value={role.slug}>
+                    {role.name} ({role.permissions.length} permissions)
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div className="mt-2 space-y-2">
+                {FALLBACK_ROLE_OPTIONS.map((option) => (
+                  <label
+                    key={option.value}
+                    className="flex cursor-pointer items-start gap-3 rounded-md border border-border p-3 hover:bg-muted"
+                  >
+                    <input
+                      type="radio"
+                      value={option.value}
+                      {...register('role')}
+                      className="mt-1"
+                    />
+                    <div>
+                      <div className="font-medium text-foreground">{option.label}</div>
+                      <div className="text-sm text-muted-foreground">{option.description}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Actions */}

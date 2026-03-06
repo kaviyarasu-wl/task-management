@@ -1,0 +1,56 @@
+{
+  "common": {
+    "notFound": "{{resource}} no encontrado/a",
+    "unauthorized": "No autorizado",
+    "forbidden": "Prohibido",
+    "validationFailed": "Error de validacion",
+    "badRequest": "Solicitud incorrecta",
+    "tooManyRequests": "Demasiadas solicitudes",
+    "internalError": "Error interno del servidor",
+    "deleted": "{{resource}} eliminado/a",
+    "updated": "{{resource}} actualizado/a",
+    "created": "{{resource}} creado/a"
+  },
+  "auth": {
+    "tokenExpired": "Token expirado",
+    "invalidToken": "Token invalido",
+    "headerMissing": "Encabezado de autorizacion faltante o mal formado",
+    "invalidCredentials": "Correo electronico o contrasena invalidos",
+    "accountLocked": "La cuenta esta bloqueada",
+    "emailNotVerified": "Correo electronico no verificado"
+  },
+  "task": {
+    "resource": "Tarea",
+    "cannotDelete": "No puedes eliminar esta tarea",
+    "transitionNotAllowed": "La transicion de \"{{from}}\" a \"{{to}}\" no esta permitida",
+    "assigned": "Se te ha asignado una tarea",
+    "completed": "Tarea completada"
+  },
+  "project": {
+    "resource": "Proyecto"
+  },
+  "webhook": {
+    "resource": "Webhook",
+    "onlyAdminsUpdate": "Solo los administradores pueden actualizar webhooks",
+    "onlyAdminsDelete": "Solo los administradores pueden eliminar webhooks",
+    "onlyRetryFailed": "Solo se pueden reintentar entregas fallidas",
+    "deliveryQueued": "Entrega en cola para reintento"
+  },
+  "invitation": {
+    "resource": "Invitacion",
+    "emailSubject": "Has sido invitado a unirte a una organizacion"
+  },
+  "user": {
+    "resource": "Usuario"
+  },
+  "integration": {
+    "resource": "Integracion",
+    "onlyAdminsManage": "Solo los administradores pueden gestionar integraciones",
+    "disconnected": "Integracion desconectada"
+  },
+  "email": {
+    "taskAssignedSubject": "Se te ha asignado una tarea",
+    "taskCompletedSubject": "Tarea completada",
+    "inviteSubject": "Has sido invitado a unirte a una organizacion"
+  }
+}

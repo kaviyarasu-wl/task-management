@@ -1,20 +1,23 @@
 import { Job } from 'bullmq';
 import { ReminderService } from '@modules/reminder/reminder.service';
 import { emailQueue } from '../queues';
+import { createLogger } from '@infrastructure/logger';
+
+const log = createLogger('DigestProcessor');
 
 /**
  * Daily digest processor — sends digest emails to users who have enabled
  * daily digest and whose local time matches their configured digest time.
  */
 export async function digestProcessor(job: Job): Promise<void> {
-  console.log('[DigestProcessor] Starting daily digest check...');
+  log.info({ jobId: job.id }, 'Starting daily digest check');
 
   const reminderService = new ReminderService();
 
   // Find users who have digest enabled and it's time to send
   const usersWithDigest = await reminderService.getUsersWithDigestDue();
 
-  console.log(`[DigestProcessor] Found ${usersWithDigest.length} users for digest`);
+  log.info({ userCount: usersWithDigest.length }, 'Found users for digest');
 
   for (const user of usersWithDigest) {
     try {
@@ -31,7 +34,7 @@ export async function digestProcessor(job: Job): Promise<void> {
       );
 
       if (dueToday.length === 0 && overdue.length === 0) {
-        console.log(`[DigestProcessor] No tasks to report for user ${user._id}`);
+        log.debug({ userId: user._id }, 'No tasks to report for user');
         continue;
       }
 
@@ -89,11 +92,11 @@ export async function digestProcessor(job: Job): Promise<void> {
         { jobId: `digest-${user._id}-${today.toISOString().split('T')[0]}` }
       );
 
-      console.log(`[DigestProcessor] Queued digest email for user ${user._id}`);
+      log.info({ userId: user._id }, 'Queued digest email');
     } catch (error) {
-      console.error(`[DigestProcessor] Failed to send digest to user ${user._id}:`, error);
+      log.error({ err: error, userId: user._id }, 'Failed to send digest');
     }
   }
 
-  console.log('[DigestProcessor] Daily digest check completed');
+  log.info({ jobId: job.id }, 'Daily digest check completed');
 }

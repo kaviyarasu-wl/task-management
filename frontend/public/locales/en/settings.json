@@ -1,0 +1,52 @@
+{
+  "title": "Organization Settings",
+  "failedToLoad": "Failed to load organization settings",
+  "profile": {
+    "title": "Profile",
+    "language": "Language",
+    "languageDescription": "Choose your preferred display language",
+    "theme": "Theme",
+    "notifications": "Notification Preferences"
+  },
+  "organization": {
+    "name": "Organization Name",
+    "slug": "Organization URL",
+    "created": "Created {{date}}"
+  },
+  "configuration": {
+    "title": "Configuration",
+    "statuses": "Statuses",
+    "statusesDescription": "Manage task statuses and categories",
+    "workflow": "Workflow",
+    "workflowDescription": "Configure status transitions and rules",
+    "webhooks": "Webhooks",
+    "webhooksDescription": "Configure outgoing webhook integrations",
+    "integrations": "Integrations",
+    "integrationsDescription": "Connect Slack, GitHub, Jira, and more",
+    "roles": "Roles & Permissions",
+    "rolesDescription": "Manage custom roles and their permissions",
+    "auditLog": "Audit Log",
+    "auditLogDescription": "View user activity and change history"
+  },
+  "usage": {
+    "title": "Usage",
+    "teamMembers": "Team Members",
+    "projects": "Projects"
+  },
+  "plan": {
+    "title": "Plan Details",
+    "current": "Current Plan",
+    "status": "Status",
+    "orgId": "Organization ID",
+    "limits": "Plan Limits",
+    "features": "Included Features",
+    "upgrade": "Upgrade to Pro or Enterprise for higher limits and advanced features.",
+    "viewPlans": "View Plans"
+  },
+  "danger": {
+    "title": "Danger Zone",
+    "description": "Irreversible actions that affect your entire organization",
+    "deleteOrg": "Delete Organization",
+    "deleteOrgDisabled": "This feature is not available. Contact support for assistance."
+  }
+}

@@ -1,17 +1,20 @@
 import { Job } from 'bullmq';
 import { ScheduledReportService } from '@modules/reports/scheduledReport.service';
+import { createLogger } from '@infrastructure/logger';
+
+const log = createLogger('ScheduledReportProcessor');
 
 /**
  * Scheduled report processor — processes due scheduled reports.
  * Runs on a schedule and finds all reports that are due to be generated and sent.
  */
 export async function scheduledReportProcessor(job: Job): Promise<void> {
-  console.log(`[ScheduledReportProcessor] Starting scheduled report check (job ${job.id})`);
+  log.info({ jobId: job.id }, 'Starting scheduled report check');
 
   const scheduledReportService = new ScheduledReportService();
   const dueReports = await scheduledReportService.getDueReports();
 
-  console.log(`[ScheduledReportProcessor] Found ${dueReports.length} due reports`);
+  log.info({ jobId: job.id, dueCount: dueReports.length }, 'Found due reports');
 
   let successCount = 0;
   let errorCount = 0;
@@ -20,17 +23,15 @@ export async function scheduledReportProcessor(job: Job): Promise<void> {
     try {
       await scheduledReportService.processScheduledReport(report);
       successCount++;
-      console.log(`[ScheduledReportProcessor] Processed report "${report.name}" (${report._id})`);
+      log.info({ reportId: report._id, reportName: report.name }, 'Processed report');
     } catch (error) {
       errorCount++;
-      console.error(
-        `[ScheduledReportProcessor] Failed to process report "${report.name}" (${report._id}):`,
-        error instanceof Error ? error.message : error
+      log.error(
+        { err: error, reportId: report._id, reportName: report.name },
+        'Failed to process report'
       );
     }
   }
 
-  console.log(
-    `[ScheduledReportProcessor] Completed: ${successCount} success, ${errorCount} failed`
-  );
+  log.info({ jobId: job.id, successCount, errorCount }, 'Scheduled report check completed');
 }

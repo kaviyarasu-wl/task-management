@@ -1,0 +1,54 @@
+{
+  "title": "Tareas",
+  "create": "Crear Tarea",
+  "edit": "Editar Tarea",
+  "form": {
+    "title": "Título",
+    "titlePlaceholder": "Ingresa el título de la tarea",
+    "description": "Descripción",
+    "descriptionPlaceholder": "Ingresa la descripción de la tarea",
+    "project": "Proyecto",
+    "status": "Estado",
+    "priority": "Prioridad",
+    "dueDate": "Fecha de vencimiento",
+    "tags": "Etiquetas",
+    "tagsPlaceholder": "Ingresa etiquetas separadas por comas",
+    "tagsHint": "Separa múltiples etiquetas con comas",
+    "assignee": "Asignado a",
+    "unassigned": "Sin asignar",
+    "recurrence": "Repetir tarea"
+  },
+  "priority": {
+    "low": "Baja",
+    "medium": "Media",
+    "high": "Alta",
+    "urgent": "Urgente"
+  },
+  "view": {
+    "list": "Lista",
+    "board": "Tablero"
+  },
+  "filters": {
+    "allProjects": "Todos los proyectos",
+    "allStatuses": "Todos los estados",
+    "allPriorities": "Todas las prioridades",
+    "assignedTo": "Asignado a"
+  },
+  "empty": {
+    "title": "Aún no hay tareas",
+    "message": "Crea tu primera tarea para comenzar"
+  },
+  "bulk": {
+    "selected": "{{count}} tarea seleccionada",
+    "selected_other": "{{count}} tareas seleccionadas",
+    "changeStatus": "Cambiar estado",
+    "delete": "Eliminar selección",
+    "assign": "Asignar"
+  },
+  "toast": {
+    "created": "Tarea creada exitosamente",
+    "updated": "Tarea actualizada exitosamente",
+    "deleted": "Tarea eliminada exitosamente",
+    "assigned": "Te han asignado a: {{title}}"
+  }
+}

@@ -1,6 +1,10 @@
 import { Worker, Processor } from 'bullmq';
 import { getBullMQConnection } from '../../redis/client';
 import { EmailJobData } from '../queues';
+import { createLogger } from '@infrastructure/logger';
+import { queueJobTotal, queueJobDuration } from '@infrastructure/metrics';
+
+const log = createLogger('EmailWorker');
 
 /**
  * Infrastructure worker — intentionally dumb.
@@ -16,15 +20,20 @@ export function createEmailWorker(processor: Processor<EmailJobData>): Worker<Em
   });
 
   worker.on('completed', (job) => {
-    console.log(`[EmailWorker] Job ${job.id} completed`);
+    log.info({ jobId: job.id }, 'Job completed');
+    queueJobTotal.inc({ queue: 'email', status: 'completed' });
+    if (job.processedOn && job.finishedOn) {
+      queueJobDuration.observe({ queue: 'email' }, (job.finishedOn - job.processedOn) / 1000);
+    }
   });
 
   worker.on('failed', (job, err) => {
-    console.error(`[EmailWorker] Job ${job?.id} failed:`, err.message);
+    log.error({ jobId: job?.id, err }, 'Job failed');
+    queueJobTotal.inc({ queue: 'email', status: 'failed' });
   });
 
   worker.on('error', (err) => {
-    console.error('[EmailWorker] Worker error:', err);
+    log.error({ err }, 'Worker error');
   });
 
   return worker;

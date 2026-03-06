@@ -3,6 +3,9 @@ import { ApiKeyService } from '@modules/apiKey/apiKey.service';
 import { ApiKeyPermission } from '@modules/apiKey/apiKey.model';
 import { RequestContext } from '@core/context/RequestContext';
 import { UnauthorizedError, ForbiddenError, TooManyRequestsError } from '@core/errors/AppError';
+import { createLogger } from '@infrastructure/logger';
+
+const log = createLogger('ApiKeyMiddleware');
 import { getRedisClient } from '@infrastructure/redis/client';
 import { randomUUID } from 'crypto';
 
@@ -65,7 +68,7 @@ export async function apiKeyAuthMiddleware(
 
     // Record usage asynchronously (don't block response)
     apiKeyService.recordUsage(apiKey._id.toString(), clientIp).catch((err) => {
-      console.error('Failed to record API key usage:', err);
+      log.error({ err }, 'Failed to record API key usage');
     });
 
     // Set request context for API key auth
@@ -76,6 +79,7 @@ export async function apiKeyAuthMiddleware(
         email: '', // Not available via API key
         role: 'member', // API keys have member-level role by default
         requestId: randomUUID(),
+        locale: (req as Request & { detectedLocale?: string }).detectedLocale ?? 'en',
         apiKeyId: apiKey._id.toString(),
         permissions: apiKey.permissions,
       },

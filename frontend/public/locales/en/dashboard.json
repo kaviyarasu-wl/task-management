@@ -1,0 +1,13 @@
+{
+  "title": "Dashboard",
+  "welcome": "Welcome back, {{name}}",
+  "stats": {
+    "totalTasks": "Total Tasks",
+    "completedToday": "Completed Today",
+    "overdue": "Overdue",
+    "upcomingDeadlines": "Upcoming Deadlines"
+  },
+  "recentActivity": "Recent Activity",
+  "myTasks": "My Tasks",
+  "teamOverview": "Team Overview"
+}

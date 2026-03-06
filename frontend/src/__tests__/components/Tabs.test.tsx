@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/shared/components/ui/Tabs';
@@ -53,8 +53,11 @@ describe('Tabs', () => {
 
       await user.click(screen.getByRole('tab', { name: 'Tab 2' }));
 
-      expect(screen.queryByText('Content 1')).not.toBeInTheDocument();
       expect(screen.getByText('Content 2')).toBeInTheDocument();
+      // AnimatePresence may keep old content briefly during exit animation
+      await waitFor(() => {
+        expect(screen.queryByText('Content 1')).not.toBeInTheDocument();
+      });
     });
 
     it('does not switch to disabled tab', async () => {
@@ -64,7 +67,9 @@ describe('Tabs', () => {
       await user.click(screen.getByRole('tab', { name: 'Tab 3' }));
 
       expect(screen.getByText('Content 1')).toBeInTheDocument();
-      expect(screen.queryByText('Content 3')).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.queryByText('Content 3')).not.toBeInTheDocument();
+      });
     });
 
     it('calls onValueChange when tab changes', async () => {

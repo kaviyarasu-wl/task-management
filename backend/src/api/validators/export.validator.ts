@@ -12,10 +12,11 @@ const isoDateString = z.string().refine((val) => !isNaN(Date.parse(val)), {
  * Export query schema for download endpoints
  */
 export const exportQuerySchema = z.object({
-  format: z.enum(['csv', 'json']).default('csv'),
+  format: z.enum(['csv', 'json', 'pdf', 'xlsx']).default('csv'),
   projectId: z.string().regex(objectIdRegex, 'Invalid project ID').optional(),
   start: isoDateString.optional(),
   end: isoDateString.optional(),
+  async: z.coerce.boolean().default(false),
 });
 
 /**
@@ -30,7 +31,7 @@ export const scheduledReportCreateSchema = z.object({
     'project-summary',
     'velocity',
   ]),
-  format: z.enum(['csv', 'json']).default('csv'),
+  format: z.enum(['csv', 'json', 'pdf', 'xlsx']).default('csv'),
   cronExpression: z
     .string()
     .min(9, 'Invalid cron expression')

@@ -1,6 +1,10 @@
 import { Worker, Processor } from 'bullmq';
 import { getBullMQConnection } from '../../redis/client';
 import { RecurrenceJobData } from '../queues';
+import { createLogger } from '@infrastructure/logger';
+import { queueJobTotal, queueJobDuration } from '@infrastructure/metrics';
+
+const log = createLogger('RecurrenceWorker');
 
 export function createRecurrenceWorker(
   processor: Processor<RecurrenceJobData>
@@ -11,15 +15,20 @@ export function createRecurrenceWorker(
   });
 
   worker.on('completed', (job) => {
-    console.log(`[RecurrenceWorker] Job ${job.id} completed`);
+    log.info({ jobId: job.id }, 'Job completed');
+    queueJobTotal.inc({ queue: 'recurrence', status: 'completed' });
+    if (job.processedOn && job.finishedOn) {
+      queueJobDuration.observe({ queue: 'recurrence' }, (job.finishedOn - job.processedOn) / 1000);
+    }
   });
 
   worker.on('failed', (job, err) => {
-    console.error(`[RecurrenceWorker] Job ${job?.id} failed:`, err.message);
+    log.error({ jobId: job?.id, err }, 'Job failed');
+    queueJobTotal.inc({ queue: 'recurrence', status: 'failed' });
   });
 
   worker.on('error', (err) => {
-    console.error('[RecurrenceWorker] Worker error:', err);
+    log.error({ err }, 'Worker error');
   });
 
   return worker;

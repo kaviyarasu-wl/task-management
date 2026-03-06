@@ -72,7 +72,11 @@ function Modal({
     <AnimatePresence>
       {isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className={cn(
+            'fixed inset-0 z-50',
+            'flex flex-col',
+            'md:flex md:items-center md:justify-center md:p-4'
+          )}
           role="presentation"
         >
           {/* Backdrop with blur */}
@@ -99,8 +103,12 @@ function Modal({
               'bg-background/80 dark:bg-background/70',
               'backdrop-blur-2xl',
               'border border-white/20 dark:border-white/10',
-              'rounded-2xl',
               'shadow-2xl shadow-black/10 dark:shadow-black/30',
+              // Mobile: full-screen
+              'h-full max-h-screen rounded-none',
+              'overflow-y-auto',
+              // Desktop: centered dialog
+              'md:h-auto md:max-h-[90vh] md:rounded-2xl',
               sizeClasses[size]
             )}
             variants={scaleVariants}
@@ -110,13 +118,13 @@ function Modal({
           >
             {/* Gradient overlay */}
             <div
-              className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/10 via-transparent to-white/5 pointer-events-none"
+              className="absolute inset-0 md:rounded-2xl bg-gradient-to-br from-white/10 via-transparent to-white/5 pointer-events-none"
               aria-hidden="true"
             />
 
             {/* Header */}
             {(title || showCloseButton) && (
-              <div className="relative flex items-start justify-between border-b border-border/30 p-6">
+              <div className="relative flex items-start justify-between border-b border-border/30 p-4 md:p-6">
                 <div className="flex-1 pr-8">
                   {title && (
                     <h2
@@ -157,7 +165,7 @@ function Modal({
             )}
 
             {/* Content */}
-            <div className="relative p-6">{children}</div>
+            <div className="relative p-4 md:p-6">{children}</div>
           </motion.div>
         </div>
       )}
@@ -178,8 +186,9 @@ function ModalFooter({ children, className }: ModalFooterProps) {
       className={cn(
         'flex items-center justify-end gap-3',
         'border-t border-border/30',
-        'pt-6 -mx-6 -mb-6 px-6 pb-6 mt-6',
-        'bg-muted/20 rounded-b-2xl',
+        'pt-4 -mx-4 -mb-4 px-4 pb-4 mt-4',
+        'md:pt-6 md:-mx-6 md:-mb-6 md:px-6 md:pb-6 md:mt-6',
+        'bg-muted/20 md:rounded-b-2xl',
         className
       )}
     >

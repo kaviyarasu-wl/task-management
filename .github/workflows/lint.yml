@@ -1,0 +1,25 @@
+name: Lint & Typecheck
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ${{ matrix.package }}/package-lock.json
+      - run: npm ci
+        working-directory: ${{ matrix.package }}
+      - run: npm run lint
+        working-directory: ${{ matrix.package }}
+      - run: npm run typecheck
+        working-directory: ${{ matrix.package }}
+        if: matrix.package == 'backend'

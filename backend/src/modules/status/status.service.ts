@@ -2,17 +2,14 @@ import { StatusRepository } from './status.repository';
 import { TransitionService } from './transition.service';
 import { IStatusDocument, toSlug } from './status.model';
 import { Task } from '../task/task.model';
-import { cache } from '@infrastructure/redis/cache';
+import { cachedQuery, invalidateNamespace } from '@infrastructure/cache/cacheHelper';
+import { config } from '../../config';
 import { RequestContext } from '@core/context/RequestContext';
 import { NotFoundError, ConflictError, ValidationError } from '@core/errors/AppError';
 import { EventBus } from '@core/events/EventBus';
 import { CreateStatusDTO, UpdateStatusDTO, TransitionMatrix } from '../../types/status.types';
 
-/** Cache TTL in seconds (5 minutes) */
-const CACHE_TTL_SECONDS = 300;
-
-/** Cache key helper for status list per tenant */
-const cacheKey = (tenantId: string): string => `cache:${tenantId}:statuses:list`;
+const CACHE_NAMESPACE = 'statuses';
 
 export class StatusService {
   private repo: StatusRepository;
@@ -25,15 +22,17 @@ export class StatusService {
 
   /**
    * Get all statuses for the current tenant, sorted by order.
-   * Uses cache-first strategy with 5 minute TTL.
+   * Uses cache-first strategy with configurable TTL (default 1 hour).
    */
   async getAll(): Promise<IStatusDocument[]> {
     const { tenantId } = RequestContext.get();
 
-    return cache.getOrSet(
-      cacheKey(tenantId),
+    return cachedQuery(
+      tenantId,
+      CACHE_NAMESPACE,
+      'list',
       () => this.repo.findByTenant(tenantId),
-      CACHE_TTL_SECONDS
+      config.CACHE_STATUS_TTL
     );
   }
 
@@ -43,13 +42,18 @@ export class StatusService {
    */
   async getById(id: string): Promise<IStatusDocument> {
     const { tenantId } = RequestContext.get();
-    const status = await this.repo.findById(id, tenantId);
 
-    if (!status) {
-      throw new NotFoundError('Status');
-    }
-
-    return status;
+    return cachedQuery(
+      tenantId,
+      CACHE_NAMESPACE,
+      id,
+      async () => {
+        const status = await this.repo.findById(id, tenantId);
+        if (!status) throw new NotFoundError('Status');
+        return status;
+      },
+      config.CACHE_STATUS_TTL
+    );
   }
 
   /**
@@ -59,18 +63,21 @@ export class StatusService {
   async getDefault(): Promise<IStatusDocument> {
     const { tenantId } = RequestContext.get();
 
-    const defaultStatus = await this.repo.findDefault(tenantId);
-    if (defaultStatus) {
-      return defaultStatus;
-    }
+    return cachedQuery(
+      tenantId,
+      CACHE_NAMESPACE,
+      'default',
+      async () => {
+        const defaultStatus = await this.repo.findDefault(tenantId);
+        if (defaultStatus) return defaultStatus;
 
-    // Fallback to first status by order
-    const statuses = await this.repo.findByTenant(tenantId);
-    if (statuses.length === 0) {
-      throw new NotFoundError('Status');
-    }
-
-    return statuses[0];
+        // Fallback to first status by order
+        const statuses = await this.repo.findByTenant(tenantId);
+        if (statuses.length === 0) throw new NotFoundError('Status');
+        return statuses[0];
+      },
+      config.CACHE_STATUS_TTL
+    );
   }
 
   /**
@@ -103,7 +110,7 @@ export class StatusService {
     const status = await this.repo.create(createData);
 
     // Invalidate cache
-    await this.invalidateCache(tenantId);
+    await invalidateNamespace(tenantId, CACHE_NAMESPACE);
 
     // Emit event for potential listeners
     await EventBus.emit('status.created', {
@@ -145,7 +152,7 @@ export class StatusService {
     }
 
     // Invalidate cache
-    await this.invalidateCache(tenantId);
+    await invalidateNamespace(tenantId, CACHE_NAMESPACE);
 
     // Emit event
     await EventBus.emit('status.updated', {
@@ -204,7 +211,7 @@ export class StatusService {
     await this.compactOrder(tenantId);
 
     // Invalidate cache
-    await this.invalidateCache(tenantId);
+    await invalidateNamespace(tenantId, CACHE_NAMESPACE);
 
     // Emit event
     await EventBus.emit('status.deleted', {
@@ -255,7 +262,7 @@ export class StatusService {
     await this.repo.reorder(tenantId, orderedIds);
 
     // Invalidate cache
-    await this.invalidateCache(tenantId);
+    await invalidateNamespace(tenantId, CACHE_NAMESPACE);
 
     // Emit event
     await EventBus.emit('status.reordered', {
@@ -287,7 +294,7 @@ export class StatusService {
     }
 
     // Invalidate cache
-    await this.invalidateCache(tenantId);
+    await invalidateNamespace(tenantId, CACHE_NAMESPACE);
 
     // Emit event
     await EventBus.emit('status.defaultChanged', {
@@ -324,7 +331,7 @@ export class StatusService {
     const updated = await this.transitionService.updateTransitions(id, allowedIds, tenantId);
 
     // Invalidate cache
-    await this.invalidateCache(tenantId);
+    await invalidateNamespace(tenantId, CACHE_NAMESPACE);
 
     // Emit event
     await EventBus.emit('status.transitionsUpdated', {
@@ -393,15 +400,4 @@ export class StatusService {
     await this.repo.reorder(tenantId, orderedIds);
   }
 
-  /**
-   * Invalidate the status cache for a tenant.
-   */
-  private async invalidateCache(tenantId: string): Promise<void> {
-    try {
-      await cache.del(cacheKey(tenantId));
-    } catch {
-      // Log but don't fail if cache is unavailable
-      console.warn(`Failed to invalidate status cache for tenant ${tenantId}`);
-    }
-  }
 }

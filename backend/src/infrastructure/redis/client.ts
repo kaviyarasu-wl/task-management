@@ -1,7 +1,18 @@
 import Redis, { RedisOptions } from 'ioredis';
 import { config } from '../../config';
+import { createLogger } from '@infrastructure/logger';
+import { Gauge } from 'prom-client';
+import { register } from '@infrastructure/metrics';
+
+const log = createLogger('Redis');
 
 let redisClient: Redis | null = null;
+
+const redisConnectionStatus = new Gauge({
+  name: 'redis_connection_status',
+  help: 'Redis connection status (1 = connected, 0 = disconnected)',
+  registers: [register],
+});
 
 const baseRedisOptions: RedisOptions = {
   host: config.REDIS_HOST,
@@ -10,7 +21,7 @@ const baseRedisOptions: RedisOptions = {
   enableReadyCheck: true,
   retryStrategy: (times) => {
     if (times > 10) {
-      console.error('❌ Redis: max retries exceeded');
+      log.error('Max retries exceeded');
       return null;
     }
     return Math.min(times * 200, 2000);
@@ -40,9 +51,15 @@ export function getRedisClient(): Redis {
     maxRetriesPerRequest: 3,
   });
 
-  redisClient.on('connect', () => console.log('✅ Redis connected'));
-  redisClient.on('error', (err) => console.error('❌ Redis error:', err.message));
-  redisClient.on('close', () => console.warn('⚠️  Redis connection closed'));
+  redisClient.on('connect', () => {
+    log.info('Redis connected');
+    redisConnectionStatus.set(1);
+  });
+  redisClient.on('error', (err) => log.error({ err }, 'Redis error'));
+  redisClient.on('close', () => {
+    log.warn('Redis connection closed');
+    redisConnectionStatus.set(0);
+  });
 
   return redisClient;
 }
@@ -51,5 +68,5 @@ export async function disconnectRedis(): Promise<void> {
   if (!redisClient) return;
   await redisClient.quit();
   redisClient = null;
-  console.log('Redis disconnected cleanly');
+  log.info('Redis disconnected cleanly');
 }

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { mainNavItems, bottomNavItems, type NavItem } from '@/shared/constants/navigation';
 import { useAuthStore } from '@/features/auth';
@@ -85,6 +86,7 @@ interface MobileNavItemProps {
 }
 
 function MobileNavItem({ item, onClose }: MobileNavItemProps) {
+  const { t } = useTranslation();
   const Icon = item.icon;
 
   return (
@@ -103,7 +105,7 @@ function MobileNavItem({ item, onClose }: MobileNavItemProps) {
         }
       >
         <Icon className="h-5 w-5" />
-        <span>{item.label}</span>
+        <span>{t(item.labelKey)}</span>
       </NavLink>
     </li>
   );

@@ -63,9 +63,9 @@ export function AuthLayout() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex min-h-screen items-center justify-center p-4">
+      <main id="main-content" role="main" aria-label="Authentication" className="relative z-10 flex min-h-screen items-center justify-center p-4">
         <Outlet />
-      </div>
+      </main>
     </div>
   );
 }

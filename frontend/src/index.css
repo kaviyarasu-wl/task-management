@@ -195,6 +195,11 @@
     animation: float 8s ease-in-out infinite;
   }
 
+  /* Search highlight styling */
+  .search-highlight mark {
+    @apply rounded-sm bg-primary/20 px-0.5 text-foreground;
+  }
+
   /* Glow effect for interactive elements */
   .glow-effect {
     position: relative;
@@ -308,6 +313,44 @@
       background: hsl(var(--background) / 0.95);
     }
   }
+}
+
+/* Enhanced focus indicators for WCAG 2.1 AA compliance */
+/* Minimum 3:1 contrast ratio against adjacent colors */
+:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+/* Ensure focus ring is visible on dark backgrounds */
+.dark :focus-visible {
+  outline-color: hsl(var(--primary));
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.3);
+}
+
+/* Interactive elements inherit border-radius for focus ring */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* Screen reader only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 
 /* Reduced motion preference */

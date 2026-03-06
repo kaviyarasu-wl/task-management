@@ -1,6 +1,10 @@
 import { Worker, Processor } from 'bullmq';
 import { getBullMQConnection } from '../../redis/client';
 import { WebhookJobData } from '../queues';
+import { createLogger } from '@infrastructure/logger';
+import { queueJobTotal, queueJobDuration } from '@infrastructure/metrics';
+
+const log = createLogger('WebhookWorker');
 
 /**
  * Webhook worker — processes webhook delivery jobs.
@@ -16,15 +20,20 @@ export function createWebhookWorker(processor: Processor<WebhookJobData>): Worke
   });
 
   worker.on('completed', (job) => {
-    console.log(`[WebhookWorker] Job ${job.id} completed`);
+    log.info({ jobId: job.id }, 'Job completed');
+    queueJobTotal.inc({ queue: 'webhooks', status: 'completed' });
+    if (job.processedOn && job.finishedOn) {
+      queueJobDuration.observe({ queue: 'webhooks' }, (job.finishedOn - job.processedOn) / 1000);
+    }
   });
 
   worker.on('failed', (job, err) => {
-    console.error(`[WebhookWorker] Job ${job?.id} failed:`, err.message);
+    log.error({ jobId: job?.id, err }, 'Job failed');
+    queueJobTotal.inc({ queue: 'webhooks', status: 'failed' });
   });
 
   worker.on('error', (err) => {
-    console.error('[WebhookWorker] Worker error:', err);
+    log.error({ err }, 'Worker error');
   });
 
   return worker;

@@ -1,0 +1,54 @@
+{
+  "title": "Tasks",
+  "create": "Create Task",
+  "edit": "Edit Task",
+  "form": {
+    "title": "Title",
+    "titlePlaceholder": "Enter task title",
+    "description": "Description",
+    "descriptionPlaceholder": "Enter task description",
+    "project": "Project",
+    "status": "Status",
+    "priority": "Priority",
+    "dueDate": "Due Date",
+    "tags": "Tags",
+    "tagsPlaceholder": "Enter tags separated by commas",
+    "tagsHint": "Separate multiple tags with commas",
+    "assignee": "Assignee",
+    "unassigned": "Unassigned",
+    "recurrence": "Repeat task"
+  },
+  "priority": {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "urgent": "Urgent"
+  },
+  "view": {
+    "list": "List",
+    "board": "Board"
+  },
+  "filters": {
+    "allProjects": "All Projects",
+    "allStatuses": "All Statuses",
+    "allPriorities": "All Priorities",
+    "assignedTo": "Assigned to"
+  },
+  "empty": {
+    "title": "No tasks yet",
+    "message": "Create your first task to get started"
+  },
+  "bulk": {
+    "selected": "{{count}} task selected",
+    "selected_other": "{{count}} tasks selected",
+    "changeStatus": "Change Status",
+    "delete": "Delete Selected",
+    "assign": "Assign"
+  },
+  "toast": {
+    "created": "Task created successfully",
+    "updated": "Task updated successfully",
+    "deleted": "Task deleted successfully",
+    "assigned": "You've been assigned to: {{title}}"
+  }
+}

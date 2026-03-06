@@ -105,3 +105,54 @@ export type WebhookJobData = {
   deliveryId: string;
   tenantId: string;
 };
+
+export const exportQueue = new Queue('exports', {
+  connection: connection(),
+  defaultJobOptions: {
+    attempts: 2,
+    backoff: { type: 'exponential', delay: 10000 },
+    removeOnComplete: { count: 50 },
+    removeOnFail: { count: 100 },
+  },
+});
+
+export type ExportJobData = {
+  tenantId: string;
+  userId: string;
+  reportType: string;
+  format: string;
+  filters?: Record<string, unknown>;
+  dateRange?: { start: string; end: string };
+  recipientEmail: string;
+};
+
+export const auditCleanupQueue = new Queue('audit-cleanup', {
+  connection: connection(),
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 30000 },
+    removeOnComplete: { count: 10 },
+    removeOnFail: { count: 50 },
+  },
+});
+
+export type AuditCleanupJobData = {
+  triggeredAt?: string;
+};
+
+export const integrationQueue = new Queue('integrations', {
+  connection: connection(),
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 5000 },
+    removeOnComplete: { count: 100 },
+    removeOnFail: { count: 300 },
+  },
+});
+
+export type IntegrationJobData = {
+  integrationId: string;
+  event: string;
+  payload: Record<string, unknown>;
+  tenantId: string;
+};

@@ -29,7 +29,7 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {error && (
-        <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+        <div role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
           {(error as any)?.response?.data?.message || 'Login failed. Please try again.'}
         </div>
       )}
@@ -43,6 +43,9 @@ export function LoginForm() {
           type="email"
           id="email"
           autoComplete="email"
+          aria-required="true"
+          aria-invalid={!!errors.email}
+          aria-describedby={errors.email ? 'email-error' : undefined}
           className={cn(
             'mt-1 block w-full rounded-md border border-border bg-background px-3 py-2',
             'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',
@@ -50,7 +53,7 @@ export function LoginForm() {
           )}
         />
         {errors.email && (
-          <p className="mt-1 text-sm text-destructive">{errors.email.message}</p>
+          <p id="email-error" role="alert" className="mt-1 text-sm text-destructive">{errors.email.message}</p>
         )}
       </div>
 
@@ -63,6 +66,9 @@ export function LoginForm() {
           type="password"
           id="password"
           autoComplete="current-password"
+          aria-required="true"
+          aria-invalid={!!errors.password}
+          aria-describedby={errors.password ? 'password-error' : undefined}
           className={cn(
             'mt-1 block w-full rounded-md border border-border bg-background px-3 py-2',
             'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',
@@ -70,7 +76,7 @@ export function LoginForm() {
           )}
         />
         {errors.password && (
-          <p className="mt-1 text-sm text-destructive">{errors.password.message}</p>
+          <p id="password-error" role="alert" className="mt-1 text-sm text-destructive">{errors.password.message}</p>
         )}
       </div>
 
@@ -83,6 +89,9 @@ export function LoginForm() {
           type="text"
           id="tenantSlug"
           placeholder="my-organization"
+          aria-required="true"
+          aria-invalid={!!errors.tenantSlug}
+          aria-describedby={errors.tenantSlug ? 'tenantSlug-error' : undefined}
           className={cn(
             'mt-1 block w-full rounded-md border border-border bg-background px-3 py-2',
             'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',
@@ -90,7 +99,7 @@ export function LoginForm() {
           )}
         />
         {errors.tenantSlug && (
-          <p className="mt-1 text-sm text-destructive">{errors.tenantSlug.message}</p>
+          <p id="tenantSlug-error" role="alert" className="mt-1 text-sm text-destructive">{errors.tenantSlug.message}</p>
         )}
       </div>
 

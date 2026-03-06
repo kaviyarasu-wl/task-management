@@ -25,4 +25,10 @@ applyBaseSchema(projectSchema);
 projectSchema.index({ tenantId: 1, isArchived: 1 });
 projectSchema.index({ tenantId: 1, memberIds: 1 });
 
+// Full-text search index with weighted fields
+projectSchema.index(
+  { name: 'text', description: 'text' },
+  { weights: { name: 10, description: 1 }, name: 'project_text_search' }
+);
+
 export const Project = model<IProject>('Project', projectSchema);

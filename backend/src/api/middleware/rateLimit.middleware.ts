@@ -3,6 +3,9 @@ import { getRedisClient } from '@infrastructure/redis/client';
 import { config } from '../../config';
 import { TooManyRequestsError } from '@core/errors/AppError';
 import { TenantPlan } from '../../types';
+import { createLogger } from '@infrastructure/logger';
+
+const log = createLogger('RateLimit');
 
 const PLAN_LIMITS: Record<TenantPlan, number> = {
   free: config.RATE_LIMIT_FREE,
@@ -54,7 +57,7 @@ export function rateLimitMiddleware(plan: TenantPlan = 'free') {
       next();
     } catch (err) {
       // Redis failure should not block requests — degrade gracefully
-      console.error('[RateLimit] Redis error, skipping rate limit:', err);
+      log.error({ err }, 'Redis error, skipping rate limit');
       next();
     }
   };

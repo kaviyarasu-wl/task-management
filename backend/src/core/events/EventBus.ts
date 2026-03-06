@@ -1,4 +1,8 @@
 import { EventEmitter } from 'events';
+import { createLogger } from '@infrastructure/logger';
+import { eventEmitTotal } from '@infrastructure/metrics';
+
+const log = createLogger('EventBus');
 
 // All event payloads are defined here — the single source of truth
 export interface EventPayloads {
@@ -40,7 +44,18 @@ export interface EventPayloads {
   // Webhook events
   'webhook.delivered': { webhookId: string; deliveryId: string; tenantId: string };
   'webhook.failed': { webhookId: string; deliveryId: string; tenantId: string; reason: string };
+  // File upload events
+  'file.uploaded': { uploadId: string; tenantId: string; entityType: string; entityId: string; uploadedBy: string };
+  'file.deleted': { uploadId: string; tenantId: string; entityType: string; entityId: string; deletedBy: string };
+  // Notification events
+  'notification.created': { notificationId: string; tenantId: string; userId: string };
+  // Role events
+  'role.created': { roleId: string; tenantId: string; createdBy: string };
+  'role.updated': { roleId: string; tenantId: string };
+  'role.deleted': { roleId: string; tenantId: string };
   // Admin events
+  // OAuth events
+  'user.oauthLinked': { userId: string; tenantId: string; provider: string };
   'admin.plan.created': { planId: string };
   'admin.plan.updated': { planId: string };
   'admin.plan.deleted': { planId: string };
@@ -49,6 +64,16 @@ export interface EventPayloads {
   'admin.tenant.activated': { tenantId: string };
   'admin.user.moved': { userId: string; oldTenantId: string; newTenantId: string };
   'admin.user.deleted': { userId: string; email: string };
+  // Audit events
+  'audit.logged': { auditId: string; tenantId: string; action: string; entityType: string; entityId: string };
+  // Integration events
+  'integration.connected': { integrationId: string; tenantId: string; provider: string };
+  'integration.disconnected': { integrationId: string; tenantId: string; provider: string };
+  'integration.syncCompleted': { integrationId: string; tenantId: string; provider: string };
+  // Saved view events
+  'savedView.created': { viewId: string; tenantId: string; userId: string };
+  'savedView.updated': { viewId: string; tenantId: string; userId: string };
+  'savedView.deleted': { viewId: string; tenantId: string; userId: string };
 }
 
 export type EventName = keyof EventPayloads;
@@ -69,13 +94,14 @@ class TypedEventBus {
       try {
         await listener(payload);
       } catch (err) {
-        console.error(`[EventBus] Error in listener for "${event}":`, err);
+        log.error({ err, event }, 'Error in event listener');
       }
     };
     this.emitter.on(event, safeListener);
   }
 
   async emit<T extends EventName>(event: T, payload: EventPayloads[T]): Promise<void> {
+    eventEmitTotal.inc({ event });
     const listeners = this.emitter.listeners(event) as Array<(p: EventPayloads[T]) => Promise<void>>;
     // Run all listeners concurrently — await all before returning
     await Promise.all(listeners.map((listener) => listener(payload)));

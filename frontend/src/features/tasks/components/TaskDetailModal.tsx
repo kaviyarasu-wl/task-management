@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { X, Calendar, Tag, User, Edit, MessageSquare, History, Clock, Plus, RefreshCw } from 'lucide-react';
+import { X, Calendar, Tag, User, Edit, MessageSquare, History, Clock, Plus, RefreshCw, Paperclip } from 'lucide-react';
 import type { Task } from '@/shared/types/entities.types';
 import { TaskStatusBadge } from './TaskStatusBadge';
 import { TaskPriorityBadge } from './TaskPriorityBadge';
@@ -10,8 +10,9 @@ import { ActivityList, useTaskActivities, useTaskActivityRealtime } from '@/feat
 import { TimeTracker, TimeEntryList, TimeEntryForm } from '@/features/timeTracking';
 import { RecurrenceDisplay } from './RecurrenceDisplay';
 import { RecurrencePreview } from './RecurrencePreview';
+import { FileUploadZone, FileList } from '@/features/uploads';
 
-type DetailTab = 'comments' | 'activity' | 'time';
+type DetailTab = 'comments' | 'activity' | 'time' | 'attachments';
 
 interface TaskDetailModalProps {
   task: Task | null;
@@ -73,7 +74,11 @@ export function TaskDetailModal({
     task.dueDate && new Date(task.dueDate) < new Date() && !isClosedStatus;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className={cn(
+      'fixed inset-0 z-50',
+      'flex flex-col',
+      'md:flex md:items-center md:justify-center md:p-4'
+    )}>
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50"
@@ -82,9 +87,17 @@ export function TaskDetailModal({
       />
 
       {/* Modal */}
-      <div className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg border border-border bg-background p-6 shadow-lg">
-        {/* Header */}
-        <div className="flex items-start justify-between">
+      <div className={cn(
+        'relative z-10 w-full bg-background shadow-lg',
+        'h-full overflow-y-auto',
+        'md:h-auto md:max-h-[90vh] md:max-w-lg md:rounded-lg md:border md:border-border'
+      )}>
+        {/* Header - sticky on mobile */}
+        <div className={cn(
+          'flex items-start justify-between',
+          'sticky top-0 z-10 bg-background/95 backdrop-blur-sm',
+          'border-b border-border p-4 md:relative md:border-b md:p-6'
+        )}>
           <div className="flex-1 pr-8">
             <h2 className="text-lg font-semibold text-foreground">{task.title}</h2>
             <div className="mt-2 flex items-center gap-2">
@@ -95,14 +108,14 @@ export function TaskDetailModal({
           <div className="flex items-center gap-2">
             <button
               onClick={() => onEdit(task)}
-              className="rounded p-1 hover:bg-muted"
+              className="rounded p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-muted"
               title="Edit task"
             >
               <Edit className="h-5 w-5 text-muted-foreground" />
             </button>
             <button
               onClick={onClose}
-              className="rounded p-1 hover:bg-muted"
+              className="rounded p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-muted"
               aria-label="Close modal"
             >
               <X className="h-5 w-5 text-muted-foreground" />
@@ -110,9 +123,11 @@ export function TaskDetailModal({
           </div>
         </div>
 
+        {/* Content with mobile padding */}
+        <div className="p-4 md:p-6">
         {/* Description */}
         {task.description && (
-          <div className="mt-6">
+          <div>
             <h3 className="text-sm font-medium text-foreground">Description</h3>
             <p className="mt-2 text-sm text-muted-foreground whitespace-pre-wrap">
               {task.description}
@@ -202,11 +217,11 @@ export function TaskDetailModal({
         {/* Comments & Activity Section */}
         <div className="mt-6 border-t border-border pt-6">
           {/* Tab Navigation */}
-          <div className="mb-4 flex gap-4 border-b border-border">
+          <div className="mb-4 flex gap-4 overflow-x-auto border-b border-border">
             <button
               onClick={() => setActiveTab('comments')}
               className={cn(
-                'flex items-center gap-2 border-b-2 pb-2 text-sm font-medium transition-colors',
+                'flex items-center gap-2 border-b-2 pb-2 text-sm font-medium transition-colors whitespace-nowrap min-h-[44px]',
                 activeTab === 'comments'
                   ? 'border-primary text-primary'
                   : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -218,7 +233,7 @@ export function TaskDetailModal({
             <button
               onClick={() => setActiveTab('activity')}
               className={cn(
-                'flex items-center gap-2 border-b-2 pb-2 text-sm font-medium transition-colors',
+                'flex items-center gap-2 border-b-2 pb-2 text-sm font-medium transition-colors whitespace-nowrap min-h-[44px]',
                 activeTab === 'activity'
                   ? 'border-primary text-primary'
                   : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -230,7 +245,7 @@ export function TaskDetailModal({
             <button
               onClick={() => setActiveTab('time')}
               className={cn(
-                'flex items-center gap-2 border-b-2 pb-2 text-sm font-medium transition-colors',
+                'flex items-center gap-2 border-b-2 pb-2 text-sm font-medium transition-colors whitespace-nowrap min-h-[44px]',
                 activeTab === 'time'
                   ? 'border-primary text-primary'
                   : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -238,6 +253,18 @@ export function TaskDetailModal({
             >
               <Clock className="h-4 w-4" />
               Time
+            </button>
+            <button
+              onClick={() => setActiveTab('attachments')}
+              className={cn(
+                'flex items-center gap-2 border-b-2 pb-2 text-sm font-medium transition-colors whitespace-nowrap min-h-[44px]',
+                activeTab === 'attachments'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <Paperclip className="h-4 w-4" />
+              Attachments
             </button>
           </div>
 
@@ -283,6 +310,12 @@ export function TaskDetailModal({
               </div>
             </div>
           )}
+          {activeTab === 'attachments' && (
+            <div className="space-y-4">
+              <FileUploadZone entityType="task" entityId={task._id} />
+              <FileList entityType="task" entityId={task._id} />
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -290,6 +323,7 @@ export function TaskDetailModal({
           <span>Created: {formatDate(task.createdAt)}</span>
           <span>Updated: {formatDate(task.updatedAt)}</span>
         </div>
+        </div>{/* end content wrapper */}
       </div>
     </div>
   );

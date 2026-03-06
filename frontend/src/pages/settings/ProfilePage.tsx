@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Check, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Loader2, Check, AlertCircle, ShieldCheck, ShieldOff } from 'lucide-react';
 import { useAuthStore } from '@/features/auth';
 import { useUpdateProfile, useChangePassword } from '@/features/users/hooks/useUserMutations';
+import { ThemeToggle } from '@/features/settings/components/ThemeToggle';
+import { LanguageSwitcher } from '@/features/settings/components/LanguageSwitcher';
 import {
   updateProfileSchema,
   changePasswordSchema,
@@ -11,12 +14,22 @@ import {
   type ChangePasswordFormData,
 } from '@/features/users/validators/user.validators';
 import { RoleBadge } from '@/features/users/components/RoleBadge';
-import { cn, getInitials, formatDate } from '@/shared/lib/utils';
+import { NotificationPreferences } from '@/features/notifications/components/NotificationPreferences';
+import { LinkedProviders } from '@/features/auth/components/LinkedProviders';
+import { MFASetupModal } from '@/features/auth/components/MFASetupModal';
+import { MFADisableModal } from '@/features/auth/components/MFADisableModal';
+import { cn, getInitials } from '@/shared/lib/utils';
+import { useFormattedDate } from '@/shared/hooks/useFormattedDate';
 
 export function ProfilePage() {
+  const { t } = useTranslation('auth');
+  const { formatDate } = useFormattedDate();
   const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
   const [profileSuccess, setProfileSuccess] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [isSetupMfaOpen, setIsSetupMfaOpen] = useState(false);
+  const [isDisableMfaOpen, setIsDisableMfaOpen] = useState(false);
 
   const updateProfileMutation = useUpdateProfile();
   const changePasswordMutation = useChangePassword();
@@ -77,7 +90,7 @@ export function ProfilePage() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-bold text-foreground">Profile</h1>
+      <h1 className="text-2xl font-bold text-foreground">{t('profile.title')}</h1>
 
       {/* User Info Card */}
       <div className="mt-6 rounded-lg border border-border bg-background p-6">
@@ -94,7 +107,7 @@ export function ProfilePage() {
               <RoleBadge role={user.role} />
               {user.createdAt && (
                 <span className="text-sm text-muted-foreground">
-                  Joined {formatDate(user.createdAt)}
+                  {t('common:time.joined', { date: formatDate(user.createdAt) })}
                 </span>
               )}
             </div>
@@ -104,20 +117,20 @@ export function ProfilePage() {
 
       {/* Profile Form */}
       <div className="mt-6 rounded-lg border border-border bg-background p-6">
-        <h3 className="text-lg font-semibold text-foreground">Update Profile</h3>
+        <h3 className="text-lg font-semibold text-foreground">{t('profile.updateProfile')}</h3>
 
         <form onSubmit={handleProfileSubmit(onProfileSubmit)} className="mt-4 space-y-4">
           {profileSuccess && (
-            <div className="flex items-center gap-2 rounded-md bg-green-50 p-3 text-sm text-green-800">
+            <div className="flex items-center gap-2 rounded-md bg-green-50 dark:bg-green-900/20 p-3 text-sm text-green-800 dark:text-green-300">
               <Check className="h-4 w-4" />
-              Profile updated successfully
+              {t('profile.profileUpdated')}
             </div>
           )}
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="firstName" className="block text-sm font-medium">
-                First name
+                {t('register.firstName')}
               </label>
               <input
                 {...registerProfile('firstName')}
@@ -138,7 +151,7 @@ export function ProfilePage() {
 
             <div>
               <label htmlFor="lastName" className="block text-sm font-medium">
-                Last name
+                {t('register.lastName')}
               </label>
               <input
                 {...registerProfile('lastName')}
@@ -169,20 +182,20 @@ export function ProfilePage() {
             {updateProfileMutation.isPending && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
-            Save Changes
+            {t('common:actions.saveChanges')}
           </button>
         </form>
       </div>
 
       {/* Password Form */}
       <div className="mt-6 rounded-lg border border-border bg-background p-6">
-        <h3 className="text-lg font-semibold text-foreground">Change Password</h3>
+        <h3 className="text-lg font-semibold text-foreground">{t('profile.changePassword')}</h3>
 
         <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="mt-4 space-y-4">
           {passwordSuccess && (
-            <div className="flex items-center gap-2 rounded-md bg-green-50 p-3 text-sm text-green-800">
+            <div className="flex items-center gap-2 rounded-md bg-green-50 dark:bg-green-900/20 p-3 text-sm text-green-800 dark:text-green-300">
               <Check className="h-4 w-4" />
-              Password changed successfully
+              {t('profile.passwordChanged')}
             </div>
           )}
 
@@ -190,13 +203,13 @@ export function ProfilePage() {
             <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
               <AlertCircle className="h-4 w-4" />
               {(changePasswordMutation.error as any)?.response?.data?.message ||
-                'Failed to change password'}
+                t('profile.failedChangePassword')}
             </div>
           )}
 
           <div>
             <label htmlFor="currentPassword" className="block text-sm font-medium">
-              Current password
+              {t('profile.currentPassword')}
             </label>
             <input
               {...registerPassword('currentPassword')}
@@ -217,7 +230,7 @@ export function ProfilePage() {
 
           <div>
             <label htmlFor="newPassword" className="block text-sm font-medium">
-              New password
+              {t('profile.newPassword')}
             </label>
             <input
               {...registerPassword('newPassword')}
@@ -235,13 +248,13 @@ export function ProfilePage() {
               </p>
             )}
             <p className="mt-1 text-xs text-muted-foreground">
-              Min 8 characters, 1 uppercase, 1 number
+              {t('profile.passwordHint')}
             </p>
           </div>
 
           <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium">
-              Confirm new password
+              {t('profile.confirmNewPassword')}
             </label>
             <input
               {...registerPassword('confirmPassword')}
@@ -271,9 +284,107 @@ export function ProfilePage() {
             {changePasswordMutation.isPending && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
-            Change Password
+            {t('profile.changePassword')}
           </button>
         </form>
+      </div>
+
+      {/* Security - MFA */}
+      <div className="mt-6 rounded-lg border border-border bg-background p-6">
+        <h3 className="text-lg font-semibold text-foreground">{t('profile.security')}</h3>
+        <div className="mt-4 flex items-center justify-between">
+          <div className="flex items-start gap-3">
+            {user.isMfaEnabled ? (
+              <ShieldCheck className="mt-0.5 h-5 w-5 text-green-500" />
+            ) : (
+              <ShieldOff className="mt-0.5 h-5 w-5 text-muted-foreground" />
+            )}
+            <div>
+              <p className="font-medium text-foreground">{t('mfa.twoFactor')}</p>
+              <p className="text-sm text-muted-foreground">
+                {user.isMfaEnabled
+                  ? t('mfa.enabledDescription')
+                  : t('mfa.disabledDescription')}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() =>
+              user.isMfaEnabled
+                ? setIsDisableMfaOpen(true)
+                : setIsSetupMfaOpen(true)
+            }
+            className={cn(
+              'rounded-md px-4 py-2 text-sm font-medium',
+              user.isMfaEnabled
+                ? 'bg-destructive/10 text-destructive hover:bg-destructive/20'
+                : 'bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90'
+            )}
+          >
+            {user.isMfaEnabled ? t('common:actions.disable') : t('common:actions.enable')}
+          </button>
+        </div>
+      </div>
+
+      <MFASetupModal
+        isOpen={isSetupMfaOpen}
+        onClose={() => setIsSetupMfaOpen(false)}
+        onSuccess={() => {
+          if (user) {
+            setUser({ ...user, isMfaEnabled: true });
+          }
+        }}
+      />
+
+      <MFADisableModal
+        isOpen={isDisableMfaOpen}
+        onClose={() => setIsDisableMfaOpen(false)}
+        onSuccess={() => {
+          if (user) {
+            setUser({ ...user, isMfaEnabled: false });
+          }
+        }}
+      />
+
+      {/* Connected Accounts */}
+      <div className="mt-6 rounded-lg border border-border bg-background p-6">
+        <h3 className="text-lg font-semibold text-foreground">{t('profile.connectedAccounts')}</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t('profile.connectedAccountsDescription')}
+        </p>
+        <div className="mt-4">
+          <LinkedProviders />
+        </div>
+      </div>
+
+      {/* Appearance */}
+      <div className="mt-6 rounded-lg border border-border bg-background p-6">
+        <h3 className="text-lg font-semibold text-foreground">{t('profile.appearance')}</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t('profile.appearanceDescription')}
+        </p>
+        <div className="mt-4">
+          <ThemeToggle showLabel />
+        </div>
+      </div>
+
+      {/* Language */}
+      <div className="mt-6">
+        <LanguageSwitcher />
+      </div>
+
+      {/* Notification Preferences */}
+      <div className="mt-6 rounded-lg border border-border bg-background p-6">
+        <h3 className="text-lg font-semibold text-foreground">
+          {t('profile.notificationPreferences')}
+        </h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t('profile.notificationPreferencesDescription')}
+        </p>
+        <div className="mt-4">
+          <NotificationPreferences />
+        </div>
       </div>
     </div>
   );

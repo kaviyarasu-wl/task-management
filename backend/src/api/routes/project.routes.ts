@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { projectController } from '@modules/project/project.controller';
-import { authMiddleware, requireRole, requireApiPermission } from '../middleware/auth.middleware';
+import { authMiddleware, requirePermission, requireApiPermission } from '../middleware/auth.middleware';
 import { asyncWrapper } from '@core/utils/asyncWrapper';
 
 const router = Router();
@@ -16,7 +16,7 @@ router.post('/', requireApiPermission('projects:write'), asyncWrapper(projectCon
 router.patch('/:id', requireApiPermission('projects:write'), asyncWrapper(projectController.update));
 router.delete(
   '/:id',
-  requireRole(['owner', 'admin']),
+  requirePermission('projects.delete'),
   requireApiPermission('projects:write'),
   asyncWrapper(projectController.delete)
 );

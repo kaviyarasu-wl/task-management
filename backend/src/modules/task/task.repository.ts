@@ -22,7 +22,7 @@ export class TaskRepository {
     let queryBuilder = Task.findOne({ _id: taskId, tenantId, deletedAt: null });
 
     if (options?.populate?.includes('status')) {
-      queryBuilder = queryBuilder.populate('status');
+      queryBuilder = queryBuilder.populate('status', 'name color category icon slug order');
     }
 
     return queryBuilder.exec();
@@ -48,8 +48,9 @@ export class TaskRepository {
       .sort({ _id: -1 })
       .limit(limit + 1);
 
+    // Populate status with only needed fields to avoid pulling full documents
     if (options?.populate?.includes('status')) {
-      queryBuilder = queryBuilder.populate('status');
+      queryBuilder = queryBuilder.populate('status', 'name color category icon slug order');
     }
 
     const data = await queryBuilder.exec();
@@ -96,5 +97,29 @@ export class TaskRepository {
       { deletedAt: new Date() }
     ).exec();
     return result !== null;
+  }
+
+  async addAttachment(
+    tenantId: string,
+    taskId: string,
+    attachment: { filename: string; url: string; uploadedAt: Date }
+  ): Promise<ITask | null> {
+    return Task.findOneAndUpdate(
+      { _id: taskId, tenantId, deletedAt: null },
+      { $push: { attachments: attachment } },
+      { new: true }
+    ).exec();
+  }
+
+  async removeAttachment(
+    tenantId: string,
+    taskId: string,
+    filename: string
+  ): Promise<ITask | null> {
+    return Task.findOneAndUpdate(
+      { _id: taskId, tenantId, deletedAt: null },
+      { $pull: { attachments: { filename } } },
+      { new: true }
+    ).exec();
   }
 }

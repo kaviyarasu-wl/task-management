@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -18,6 +18,9 @@ import { useStatuses, useStatusStore, useTransitionMatrixQuery } from '@/feature
 import { BoardColumn } from './BoardColumn';
 import { TaskCard } from './TaskCard';
 import { toast } from '@/shared/stores/toastStore';
+import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
+import { useSwipe } from '@/shared/hooks/useSwipe';
+import { cn } from '@/shared/lib/utils';
 
 interface TaskBoardProps {
   tasks: Task[];
@@ -37,6 +40,11 @@ export function TaskBoard({
   // Fetch transition matrix (syncs to store automatically)
   useTransitionMatrixQuery();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+
+  // Mobile responsiveness
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const [activeColumnIndex, setActiveColumnIndex] = useState(0);
+  const boardRef = useRef<HTMLDivElement>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -77,6 +85,15 @@ export function TaskBoard({
 
     return transitionMatrix[currentStatusId];
   }, [activeTask, transitionMatrix, statuses]);
+
+  useSwipe(boardRef, {
+    onSwipeLeft: () => {
+      setActiveColumnIndex((prev) => Math.min(prev + 1, columns.length - 1));
+    },
+    onSwipeRight: () => {
+      setActiveColumnIndex((prev) => Math.max(prev - 1, 0));
+    },
+  });
 
   const handleDragStart = (event: DragStartEvent) => {
     const task = tasks.find((t) => t._id === event.active.id);
@@ -145,6 +162,42 @@ export function TaskBoard({
           <Settings className="h-4 w-4" />
           Go to Settings
         </Link>
+      </div>
+    );
+  }
+
+  if (isMobile) {
+    // Mobile: Single column view with swipe navigation
+    return (
+      <div ref={boardRef} className="flex flex-col gap-4">
+        {/* Column indicator dots */}
+        <div className="flex items-center justify-center gap-2">
+          {columns.map((col, index) => (
+            <button
+              key={col.id}
+              onClick={() => setActiveColumnIndex(index)}
+              className={cn(
+                'h-2 rounded-full transition-all',
+                index === activeColumnIndex
+                  ? 'w-6 bg-primary'
+                  : 'w-2 bg-muted-foreground/30'
+              )}
+              aria-label={`Show ${col.status.name} column`}
+            />
+          ))}
+        </div>
+
+        {/* Active column */}
+        {columns[activeColumnIndex] && (
+          <BoardColumn
+            key={columns[activeColumnIndex].id}
+            status={columns[activeColumnIndex].status}
+            tasks={columns[activeColumnIndex].tasks}
+            onTaskClick={onTaskClick}
+            onAddTask={onAddTask}
+            isDropDisabled={false}
+          />
+        )}
       </div>
     );
   }

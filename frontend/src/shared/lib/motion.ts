@@ -416,6 +416,28 @@ export const spinnerVariants: Variants = {
 };
 
 // ============================================================================
+// REDUCED MOTION SUPPORT
+// ============================================================================
+
+/**
+ * Returns reduced variants when prefers-reduced-motion is active.
+ * Replaces transforms and movement with simple opacity fades.
+ */
+export function createReducedMotionVariant(_variants: Variants): Variants {
+  return {
+    initial: { opacity: 0 },
+    animate: {
+      opacity: 1,
+      transition: { duration: 0.01 },
+    },
+    exit: {
+      opacity: 0,
+      transition: { duration: 0.01 },
+    },
+  };
+}
+
+// ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
 

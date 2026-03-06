@@ -2,7 +2,7 @@
  * Export types for report data exports
  */
 
-export type ExportFormat = 'csv' | 'json';
+export type ExportFormat = 'csv' | 'json' | 'pdf' | 'xlsx';
 
 export type ReportType =
   | 'task-metrics'

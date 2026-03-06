@@ -1,5 +1,8 @@
 import { EventBus, EventPayloads, EventName } from '@core/events/EventBus';
 import { WebhookService, WEBHOOK_EVENTS } from './webhook.service';
+import { createLogger } from '@infrastructure/logger';
+
+const log = createLogger('WebhookListener');
 
 /**
  * Webhook listener — subscribes to domain events and queues webhook deliveries.
@@ -19,10 +22,10 @@ export function registerWebhookListeners(): void {
       try {
         await webhookService.queueDelivery(eventName, payload as Record<string, unknown>, tenantId);
       } catch (error) {
-        console.error(`[WebhookListener] Error queueing webhook for ${eventName}:`, error);
+        log.error({ err: error, eventName }, 'Error queueing webhook');
       }
     });
   }
 
-  console.log('✅ Webhook listeners registered');
+  log.info('Webhook listeners registered');
 }

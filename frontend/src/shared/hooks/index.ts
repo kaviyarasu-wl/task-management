@@ -1,2 +1,9 @@
 export { useFocusTrap } from './useFocusTrap';
 export { useKeyboardNavigation } from './useKeyboardNavigation';
+export { useFormattedDate } from './useFormattedDate';
+export { useFormattedNumber } from './useFormattedNumber';
+export { useDebouncedValue } from './useDebouncedValue';
+export { usePrefetch } from './usePrefetch';
+export { usePrefersReducedMotion } from './usePrefersReducedMotion';
+export { useMotionVariants } from './useMotionVariants';
+export { useAnnounce } from './useAnnounce';

@@ -28,6 +28,10 @@ export interface LoginResponse {
   };
   accessToken: string;
   refreshToken: string;
+
+  // MFA challenge fields (present when MFA is enabled)
+  requiresMfa?: boolean;
+  mfaToken?: string;
 }
 
 export interface RegisterResponse {

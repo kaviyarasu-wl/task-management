@@ -1,0 +1,56 @@
+{
+  "common": {
+    "notFound": "{{resource}} not found",
+    "unauthorized": "Unauthorized",
+    "forbidden": "Forbidden",
+    "validationFailed": "Validation failed",
+    "badRequest": "Bad request",
+    "tooManyRequests": "Too many requests",
+    "internalError": "Internal server error",
+    "deleted": "{{resource}} deleted",
+    "updated": "{{resource}} updated",
+    "created": "{{resource}} created"
+  },
+  "auth": {
+    "tokenExpired": "Token expired",
+    "invalidToken": "Invalid token",
+    "headerMissing": "Authorization header missing or malformed",
+    "invalidCredentials": "Invalid email or password",
+    "accountLocked": "Account is locked",
+    "emailNotVerified": "Email not verified"
+  },
+  "task": {
+    "resource": "Task",
+    "cannotDelete": "You cannot delete this task",
+    "transitionNotAllowed": "Transition from \"{{from}}\" to \"{{to}}\" is not allowed",
+    "assigned": "You have been assigned a task",
+    "completed": "Task completed"
+  },
+  "project": {
+    "resource": "Project"
+  },
+  "webhook": {
+    "resource": "Webhook",
+    "onlyAdminsUpdate": "Only admins can update webhooks",
+    "onlyAdminsDelete": "Only admins can delete webhooks",
+    "onlyRetryFailed": "Can only retry failed deliveries",
+    "deliveryQueued": "Delivery queued for retry"
+  },
+  "invitation": {
+    "resource": "Invitation",
+    "emailSubject": "You have been invited to join an organization"
+  },
+  "user": {
+    "resource": "User"
+  },
+  "integration": {
+    "resource": "Integration",
+    "onlyAdminsManage": "Only admins can manage integrations",
+    "disconnected": "Integration disconnected"
+  },
+  "email": {
+    "taskAssignedSubject": "You have been assigned a task",
+    "taskCompletedSubject": "Task completed",
+    "inviteSubject": "You have been invited to join an organization"
+  }
+}

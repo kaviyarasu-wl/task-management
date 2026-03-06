@@ -1,10 +1,31 @@
 import { UserRole } from '../../types';
 
+// OAuth types
+export type OAuthProvider = 'google' | 'github' | 'microsoft';
+
+export interface OAuthUserProfile {
+  providerUserId: string;
+  email: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  raw: Record<string, unknown>;
+}
+
+export interface OAuthTokens {
+  accessToken: string;
+  refreshToken?: string;
+  expiresIn?: number;
+}
+
 export interface JwtAccessPayload {
   userId: string;
   tenantId: string;
   email: string;
   role: UserRole;
+  /** Role permissions loaded from Role collection. Present after role migration. */
+  rolePermissions?: string[];
+  /** User's preferred locale for i18n */
+  locale?: string;
 }
 
 export interface JwtRefreshPayload {
@@ -43,4 +64,19 @@ export interface LoginInput {
   email: string;
   password: string;
   tenantSlug: string; // Must specify which org you're logging into
+}
+
+// MFA types
+
+export interface MfaLoginResponse {
+  requiresMfa: true;
+  mfaToken: string; // Short-lived JWT (5 minutes) containing userId + tenantId
+}
+
+export interface MfaTokenPayload {
+  userId: string;
+  tenantId: string;
+  email: string;
+  role: string;
+  purpose: 'mfa_verification';
 }

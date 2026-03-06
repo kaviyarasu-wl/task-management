@@ -1,9 +1,12 @@
+import { Suspense } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { AppRouter } from './router';
 import { SocketProvider } from '@/shared/contexts/SocketContext';
 import { ToastContainer } from '@/shared/components/ToastContainer';
 import { RealtimeProvider } from './RealtimeProvider';
+import { ThemeProvider } from '@/shared/contexts/ThemeProvider';
+import { LiveRegionProvider } from '@/shared/components/LiveRegion';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,16 +19,22 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <SocketProvider>
-          <RealtimeProvider>
-            <AppRouter />
-            <ToastContainer />
-          </RealtimeProvider>
-        </SocketProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading...</div>}>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <SocketProvider>
+              <RealtimeProvider>
+                <LiveRegionProvider>
+                  <AppRouter />
+                  <ToastContainer />
+                </LiveRegionProvider>
+              </RealtimeProvider>
+            </SocketProvider>
+          </BrowserRouter>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </Suspense>
   );
 }
 

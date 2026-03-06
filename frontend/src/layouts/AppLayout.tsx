@@ -1,19 +1,44 @@
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { MobileSidebar } from './components/MobileSidebar';
 import { SkipLink } from '@/shared/components/SkipLink';
+import { CommandPalette } from '@/shared/components/CommandPalette';
+import { ShortcutsHelp } from '@/shared/components/ShortcutsHelp';
+import { OfflineBanner } from '@/shared/components/OfflineBanner';
 import { ImpersonationBanner } from '@/features/admin/components/ImpersonationBanner';
 import { useAuthStore } from '@/features/auth/stores/authStore';
+import { useHotkeys } from '@/shared/hooks/useHotkeys';
+import { useOfflineSync } from '@/shared/lib/offlineSync';
 import { cn } from '@/shared/lib/utils';
 import { pageVariants } from '@/shared/lib/motion';
+import { LazyPageFallback } from '@/shared/components/LazyPageFallback';
 
 export function AppLayout() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isShortcutsHelpOpen, setIsShortcutsHelpOpen] = useState(false);
   const location = useLocation();
+
+  useHotkeys([
+    {
+      key: 'k',
+      modifiers: ['meta'],
+      handler: () => setIsCommandPaletteOpen(true),
+      ignoreInputs: false,
+    },
+    {
+      key: '?',
+      modifiers: ['shift'],
+      handler: () => setIsShortcutsHelpOpen(true),
+    },
+  ]);
+
+  // Activate offline sync processing
+  useOfflineSync();
 
   const impersonatedTenant = useAuthStore((state) => state.impersonatedTenant);
   const isImpersonating = useAuthStore((state) => state.isImpersonating);
@@ -21,6 +46,8 @@ export function AppLayout() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-violet-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      <OfflineBanner />
+
       {/* Impersonation Banner - show when impersonating */}
       {isCurrentlyImpersonating && impersonatedTenant && (
         <ImpersonationBanner tenant={impersonatedTenant} />
@@ -65,20 +92,34 @@ export function AppLayout() {
       >
         <Header onMenuClick={() => setIsMobileSidebarOpen(true)} />
 
-        <main id="main-content" className="flex-1 p-4 lg:p-8" tabIndex={-1}>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-            >
-              <Outlet />
-            </motion.div>
-          </AnimatePresence>
+        <main id="main-content" role="main" aria-label="Page content" className="flex-1 p-4 lg:p-8" tabIndex={-1}>
+          <Suspense fallback={<LazyPageFallback />}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname}
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <Outlet />
+              </motion.div>
+            </AnimatePresence>
+          </Suspense>
         </main>
       </div>
+
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+      />
+
+      {/* Shortcuts Help */}
+      <ShortcutsHelp
+        isOpen={isShortcutsHelpOpen}
+        onClose={() => setIsShortcutsHelpOpen(false)}
+      />
     </div>
   );
 }

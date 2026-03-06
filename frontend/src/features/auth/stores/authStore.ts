@@ -19,12 +19,20 @@ interface AuthState {
   impersonatedTenant: ImpersonatedTenant | null;
   originalAccessToken: string | null;
 
+  // MFA transient state (not persisted)
+  mfaToken: string | null;
+  isMfaRequired: boolean;
+
   // Actions
   setAuth: (user: User, accessToken: string, refreshToken: string) => void;
   setUser: (user: User) => void;
   setTokens: (accessToken: string, refreshToken: string) => void;
   logout: () => void;
   setLoading: (loading: boolean) => void;
+
+  // MFA actions
+  setMfaRequired: (mfaToken: string) => void;
+  clearMfaRequired: () => void;
 
   // Impersonation actions
   startImpersonation: (tenant: ImpersonatedTenant, impersonationToken: string) => void;
@@ -45,6 +53,10 @@ export const useAuthStore = create<AuthState>()(
       // Impersonation state
       impersonatedTenant: null,
       originalAccessToken: null,
+
+      // MFA transient state
+      mfaToken: null,
+      isMfaRequired: false,
 
       setAuth: (user, accessToken, refreshToken) => {
         localStorage.setItem('accessToken', accessToken);
@@ -83,6 +95,19 @@ export const useAuthStore = create<AuthState>()(
       },
 
       setLoading: (isLoading) => set({ isLoading }),
+
+      // MFA actions
+      setMfaRequired: (mfaToken) =>
+        set({
+          mfaToken,
+          isMfaRequired: true,
+        }),
+
+      clearMfaRequired: () =>
+        set({
+          mfaToken: null,
+          isMfaRequired: false,
+        }),
 
       // Impersonation actions
       startImpersonation: (tenant, impersonationToken) => {

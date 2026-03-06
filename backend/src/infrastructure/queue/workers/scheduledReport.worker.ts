@@ -1,6 +1,10 @@
 import { Worker, Processor, Job } from 'bullmq';
 import { getBullMQConnection } from '../../redis/client';
 import { ScheduledReportJobData } from '../queues';
+import { createLogger } from '@infrastructure/logger';
+import { queueJobTotal, queueJobDuration } from '@infrastructure/metrics';
+
+const log = createLogger('ScheduledReportWorker');
 
 export function createScheduledReportWorker(
   processor: Processor<ScheduledReportJobData>
@@ -11,15 +15,20 @@ export function createScheduledReportWorker(
   });
 
   worker.on('completed', (job: Job) => {
-    console.log(`[ScheduledReportWorker] Job ${job.id} completed`);
+    log.info({ jobId: job.id }, 'Job completed');
+    queueJobTotal.inc({ queue: 'scheduled-reports', status: 'completed' });
+    if (job.processedOn && job.finishedOn) {
+      queueJobDuration.observe({ queue: 'scheduled-reports' }, (job.finishedOn - job.processedOn) / 1000);
+    }
   });
 
   worker.on('failed', (job: Job | undefined, err: Error) => {
-    console.error(`[ScheduledReportWorker] Job ${job?.id} failed:`, err.message);
+    log.error({ jobId: job?.id, err }, 'Job failed');
+    queueJobTotal.inc({ queue: 'scheduled-reports', status: 'failed' });
   });
 
   worker.on('error', (err: Error) => {
-    console.error('[ScheduledReportWorker] Worker error:', err);
+    log.error({ err }, 'Worker error');
   });
 
   return worker;

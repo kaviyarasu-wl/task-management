@@ -11,6 +11,10 @@ export class AuthRepository {
     return User.findById(userId).exec();
   }
 
+  async findUserByIdWithPassword(userId: string): Promise<IUser | null> {
+    return User.findById(userId).select('+passwordHash').exec();
+  }
+
   async createUser(data: {
     tenantId: string;
     email: string;

@@ -120,6 +120,7 @@ function Dropdown({ trigger, items, align = 'left', className }: DropdownProps) 
           <motion.div
             id={menuId}
             role="menu"
+            aria-orientation="vertical"
             aria-labelledby={triggerId}
             className={cn(
               'absolute z-50 mt-2 min-w-[180px] py-1',

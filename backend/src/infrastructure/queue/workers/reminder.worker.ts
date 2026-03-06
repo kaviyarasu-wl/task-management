@@ -1,5 +1,9 @@
 import { Worker, Processor, Job } from 'bullmq';
 import { getBullMQConnection } from '../../redis/client';
+import { createLogger } from '@infrastructure/logger';
+import { queueJobTotal, queueJobDuration } from '@infrastructure/metrics';
+
+const log = createLogger('ReminderWorker');
 
 export type ReminderCheckJobData = {
   triggeredAt?: string;
@@ -12,15 +16,20 @@ export function createReminderWorker(processor: Processor<ReminderCheckJobData>)
   });
 
   worker.on('completed', (job: Job) => {
-    console.log(`[ReminderWorker] Job ${job.id} completed`);
+    log.info({ jobId: job.id }, 'Job completed');
+    queueJobTotal.inc({ queue: 'reminders', status: 'completed' });
+    if (job.processedOn && job.finishedOn) {
+      queueJobDuration.observe({ queue: 'reminders' }, (job.finishedOn - job.processedOn) / 1000);
+    }
   });
 
   worker.on('failed', (job: Job | undefined, err: Error) => {
-    console.error(`[ReminderWorker] Job ${job?.id} failed:`, err.message);
+    log.error({ jobId: job?.id, err }, 'Job failed');
+    queueJobTotal.inc({ queue: 'reminders', status: 'failed' });
   });
 
   worker.on('error', (err: Error) => {
-    console.error('[ReminderWorker] Worker error:', err);
+    log.error({ err }, 'Worker error');
   });
 
   return worker;

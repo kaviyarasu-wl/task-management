@@ -1,5 +1,8 @@
 import { EventBus } from '@core/events/EventBus';
 import { seedStatusesForTenant } from '@infrastructure/database/seeders/status.seeder';
+import { createLogger } from '@infrastructure/logger';
+
+const log = createLogger('TenantListener');
 
 /**
  * Tenant module listener — reacts to tenant lifecycle events via EventBus.
@@ -13,17 +16,17 @@ export function registerTenantListeners(): void {
    * Seeds default statuses so the tenant can immediately create tasks.
    */
   EventBus.on('tenant.created', async ({ tenantId }) => {
-    console.log(`[TenantListener] tenant.created → seeding default statuses for ${tenantId}`);
+    log.info({ tenantId }, 'Seeding default statuses for new tenant');
 
     try {
       await seedStatusesForTenant(tenantId);
-      console.log(`[TenantListener] Successfully seeded statuses for tenant ${tenantId}`);
+      log.info({ tenantId }, 'Successfully seeded statuses');
     } catch (error) {
       // Log error but don't crash — tenant creation should still succeed
       // Statuses can be seeded manually via migration if this fails
-      console.error(`[TenantListener] Failed to seed statuses for tenant ${tenantId}:`, error);
+      log.error({ err: error, tenantId }, 'Failed to seed statuses');
     }
   });
 
-  console.log('✅ Tenant listeners registered');
+  log.info('Tenant listeners registered');
 }

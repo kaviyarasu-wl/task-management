@@ -126,4 +126,34 @@ export class CommentRepository {
   async countByTask(tenantId: string, taskId: string): Promise<number> {
     return Comment.countDocuments({ tenantId, taskId, deletedAt: null }).exec();
   }
+
+  async addAttachment(
+    tenantId: string,
+    commentId: string,
+    attachment: {
+      uploadId: Types.ObjectId;
+      filename: string;
+      url: string;
+      mimetype: string;
+      size: number;
+    }
+  ): Promise<IComment | null> {
+    return Comment.findOneAndUpdate(
+      { _id: commentId, tenantId, deletedAt: null },
+      { $push: { attachments: attachment } },
+      { new: true }
+    ).exec();
+  }
+
+  async removeAttachment(
+    tenantId: string,
+    commentId: string,
+    uploadId: string
+  ): Promise<IComment | null> {
+    return Comment.findOneAndUpdate(
+      { _id: commentId, tenantId, deletedAt: null },
+      { $pull: { attachments: { uploadId: new Types.ObjectId(uploadId) } } },
+      { new: true }
+    ).exec();
+  }
 }

@@ -9,6 +9,11 @@ import type { IProject } from '@modules/project/project.model';
 import type { ITask } from '@modules/task/task.model';
 import type { IStatusDocument } from '@modules/status/status.model';
 import type { IInvitation } from '@modules/invitation/invitation.model';
+import type { IWebhook } from '@modules/webhook/webhook.model';
+import type { IComment } from '@modules/comment/comment.model';
+import type { ITimeEntry } from '@modules/timeEntry/timeEntry.model';
+import type { IRecurrence } from '@modules/recurrence/recurrence.model';
+import type { IApiKey } from '@modules/apiKey/apiKey.model';
 import type { UserRole, TenantPlan, TaskPriority, StatusCategory, StatusIcon } from '../../src/types';
 
 let counter = 0;
@@ -224,6 +229,136 @@ export function createInvitation(
 }
 
 /**
+ * Creates a partial webhook object for testing.
+ */
+export function createWebhook(
+  tenantId: string,
+  createdBy: string,
+  overrides: Partial<IWebhook> = {}
+): Partial<IWebhook> {
+  const id = getUniqueId();
+  return {
+    _id: new Types.ObjectId(),
+    tenantId,
+    name: `Test Webhook ${id}`,
+    url: `https://example.com/webhook/${id}`,
+    secret: randomUUID().replace(/-/g, '') + randomUUID().replace(/-/g, ''),
+    events: ['task.created', 'task.completed'],
+    isActive: true,
+    failureCount: 0,
+    createdBy: new Types.ObjectId(createdBy),
+    headers: {},
+    deletedAt: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+/**
+ * Creates a partial comment object for testing.
+ */
+export function createComment(
+  tenantId: string,
+  taskId: string,
+  authorId: string,
+  overrides: Partial<IComment> = {}
+): Partial<IComment> {
+  const id = getUniqueId();
+  return {
+    _id: new Types.ObjectId(),
+    tenantId,
+    taskId,
+    authorId,
+    content: `Test comment ${id}`,
+    mentions: [],
+    deletedAt: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+/**
+ * Creates a partial time entry object for testing.
+ */
+export function createTimeEntry(
+  tenantId: string,
+  taskId: string,
+  userId: string,
+  overrides: Partial<ITimeEntry> = {}
+): Partial<ITimeEntry> {
+  const id = getUniqueId();
+  const startedAt = new Date(Date.now() - 3600000); // 1 hour ago
+  const endedAt = new Date();
+  return {
+    _id: new Types.ObjectId(),
+    tenantId,
+    taskId,
+    userId,
+    description: `Time entry ${id}`,
+    startedAt,
+    endedAt,
+    durationMinutes: 60,
+    billable: false,
+    deletedAt: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+/**
+ * Creates a partial recurrence object for testing.
+ */
+export function createRecurrence(
+  tenantId: string,
+  taskTemplateId: string,
+  createdBy: string,
+  overrides: Partial<IRecurrence> = {}
+): Partial<IRecurrence> {
+  return {
+    _id: new Types.ObjectId(),
+    tenantId,
+    taskTemplateId,
+    pattern: { type: 'daily', interval: 1 },
+    nextOccurrence: new Date(Date.now() + 86400000), // tomorrow
+    occurrenceCount: 0,
+    isActive: true,
+    createdBy,
+    deletedAt: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+/**
+ * Creates a partial API key object for testing.
+ */
+export function createApiKey(
+  tenantId: string,
+  createdBy: string,
+  overrides: Partial<IApiKey> = {}
+): Partial<IApiKey> {
+  const id = getUniqueId();
+  return {
+    _id: new Types.ObjectId(),
+    tenantId,
+    name: `Test API Key ${id}`,
+    keyHash: bcrypt.hashSync(`tsk_test-key-${id}`, 10),
+    keyPrefix: `tsk_testkey${id}`,
+    permissions: ['tasks:read', 'tasks:write'] as IApiKey['permissions'],
+    isActive: true,
+    createdBy,
+    deletedAt: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+/**
  * Factory object for easy access to all creators.
  */
 export const factories = {
@@ -234,5 +369,10 @@ export const factories = {
   defaultStatuses: createDefaultStatuses,
   task: createTask,
   invitation: createInvitation,
+  webhook: createWebhook,
+  comment: createComment,
+  timeEntry: createTimeEntry,
+  recurrence: createRecurrence,
+  apiKey: createApiKey,
   reset: resetFactoryCounter,
 };

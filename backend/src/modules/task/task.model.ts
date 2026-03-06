@@ -85,11 +85,18 @@ taskSchema.set('toObject', { virtuals: true });
 // Compound indexes for the most common query patterns
 taskSchema.index({ tenantId: 1, projectId: 1, status: 1 }); // List tasks in project by status
 taskSchema.index({ tenantId: 1, assigneeId: 1, status: 1 }); // My tasks
+taskSchema.index({ tenantId: 1, assigneeId: 1, dueDate: 1 }); // My upcoming tasks (dashboard widget)
 taskSchema.index({ tenantId: 1, dueDate: 1 }); // Upcoming deadlines
 taskSchema.index({ tenantId: 1, priority: 1, status: 1 }); // Priority queue view
 
 // Indexes for reports aggregation pipelines
 taskSchema.index({ tenantId: 1, createdAt: -1 }); // Velocity reports (task creation over time)
 taskSchema.index({ tenantId: 1, completedAt: -1 }); // Completed tasks queries
+
+// Full-text search index with weighted fields
+taskSchema.index(
+  { title: 'text', description: 'text', tags: 'text' },
+  { weights: { title: 10, tags: 5, description: 1 }, name: 'task_text_search' }
+);
 
 export const Task = model<ITask>('Task', taskSchema);

@@ -8,10 +8,14 @@ export interface RequestContext {
   email: string;
   role: UserRole;
   requestId: string;
+  /** User's preferred locale for i18n */
+  locale: string;
   /** Set when request is authenticated via API key */
   apiKeyId?: string;
   /** API key permissions - only set for API key authenticated requests */
   permissions?: ApiKeyPermission[];
+  /** User's role permissions loaded from Role collection */
+  rolePermissions?: string[];
   /** Set when a superadmin is impersonating a tenant user */
   isImpersonating?: boolean;
   /** Original superadmin ID when impersonating */

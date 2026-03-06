@@ -39,7 +39,7 @@ describe('Input', () => {
 
     it('has error styles when error is present', () => {
       render(<Input error="Invalid email" />);
-      expect(screen.getByRole('textbox')).toHaveClass('border-destructive');
+      expect(screen.getByRole('textbox')).toHaveClass('border-destructive/50');
     });
 
     it('sets aria-invalid when error is present', () => {
@@ -144,7 +144,7 @@ describe('Input', () => {
 
     it('has focus-visible styles', () => {
       render(<Input />);
-      expect(screen.getByRole('textbox')).toHaveClass('focus:ring-2');
+      expect(screen.getByRole('textbox')).toHaveClass('focus:outline-none');
     });
 
     it('generates unique id when not provided', () => {
@@ -192,7 +192,7 @@ describe('Input', () => {
     it('merges custom className with default classes', () => {
       render(<Input className="my-class" />);
       const input = screen.getByRole('textbox');
-      expect(input).toHaveClass('rounded-md');
+      expect(input).toHaveClass('rounded-xl');
       expect(input).toHaveClass('my-class');
     });
   });

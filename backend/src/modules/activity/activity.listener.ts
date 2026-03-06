@@ -1,6 +1,9 @@
 import { EventBus, EventName, EventPayloads } from '@core/events/EventBus';
 import { ActivityRepository } from './activity.repository';
 import { ActivityEntityType } from './activity.model';
+import { createLogger } from '@infrastructure/logger';
+
+const log = createLogger('ActivityListener');
 
 const activityRepo = new ActivityRepository();
 
@@ -57,7 +60,7 @@ async function handleEvent<T extends EventName>(
 ): Promise<void> {
   const mapping = eventEntityMap[eventName];
   if (!mapping) {
-    console.warn(`[ActivityListener] No mapping for event: ${eventName}`);
+    log.warn({ eventName }, 'No mapping for event');
     return;
   }
 
@@ -66,11 +69,7 @@ async function handleEvent<T extends EventName>(
   const tenantId = (payload as Record<string, unknown>)['tenantId'] as string;
 
   if (!entityId || !actorId || !tenantId) {
-    console.warn(`[ActivityListener] Missing required fields for event: ${eventName}`, {
-      entityId,
-      actorId,
-      tenantId,
-    });
+    log.warn({ eventName, entityId, actorId, tenantId }, 'Missing required fields for event');
     return;
   }
 
@@ -85,7 +84,7 @@ async function handleEvent<T extends EventName>(
       occurredAt: new Date(),
     });
   } catch (err) {
-    console.error(`[ActivityListener] Failed to log activity for ${eventName}:`, err);
+    log.error({ err, eventName }, 'Failed to log activity');
   }
 }
 
@@ -102,5 +101,5 @@ export function registerActivityListeners(): void {
     });
   }
 
-  console.log(`✅ Activity listeners registered for ${eventNames.length} events`);
+  log.info({ eventCount: eventNames.length }, 'Activity listeners registered');
 }

@@ -1,5 +1,5 @@
 import { MoreHorizontal, Eye, Edit, Trash2 } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { memo, useState, useRef, useEffect } from 'react';
 import type { Task } from '@/shared/types/entities.types';
 import { useStatuses } from '@/features/statuses';
 import { TaskPriorityBadge } from './TaskPriorityBadge';
@@ -15,7 +15,7 @@ interface TaskRowProps {
   onView: (task: Task) => void;
 }
 
-export function TaskRow({ task, onStatusChange, onEdit, onDelete, onView }: TaskRowProps) {
+export const TaskRow = memo(function TaskRow({ task, onStatusChange, onEdit, onDelete, onView }: TaskRowProps) {
   const statuses = useStatuses();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -170,4 +170,5 @@ export function TaskRow({ task, onStatusChange, onEdit, onDelete, onView }: Task
       </td>
     </tr>
   );
-}
+});
+TaskRow.displayName = 'TaskRow';

@@ -3,6 +3,9 @@ import { RequestContext } from '@core/context/RequestContext';
 import { EventBus } from '@core/events/EventBus';
 import { emailQueue } from '@infrastructure/queue/queues';
 import { Task, ITask } from '@modules/task/task.model';
+import { createLogger } from '@infrastructure/logger';
+
+const log = createLogger('ReminderService');
 import { User, IUser } from '@modules/user/user.model';
 import { ReminderPreference, IReminderPreference } from './reminderPreference.model';
 import { TaskReminder, ITaskReminder } from './taskReminder.model';
@@ -89,7 +92,7 @@ export class ReminderService {
         await this.processReminder(reminder);
         processedCount++;
       } catch (error) {
-        console.error(`Failed to process reminder ${reminder._id}:`, error);
+        log.error({ err: error, reminderId: reminder._id }, 'Failed to process reminder');
       }
     }
 

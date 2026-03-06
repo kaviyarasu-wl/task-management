@@ -4,6 +4,7 @@ import type { User } from '@/shared/types/entities.types';
 import type { UserRole } from '@/shared/types/api.types';
 import { RoleBadge } from './RoleBadge';
 import { useAuthStore } from '@/features/auth';
+import { useRoles } from '@/features/roles';
 import { cn, getInitials, formatDate } from '@/shared/lib/utils';
 
 interface MemberRowProps {
@@ -12,7 +13,7 @@ interface MemberRowProps {
   onRemove: (member: User) => void;
 }
 
-const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
+const FALLBACK_ROLE_OPTIONS: { value: UserRole; label: string }[] = [
   { value: 'admin', label: 'Admin' },
   { value: 'member', label: 'Member' },
   { value: 'viewer', label: 'Viewer' },
@@ -20,9 +21,12 @@ const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
 
 export function MemberRow({ member, onRoleChange, onRemove }: MemberRowProps) {
   const currentUser = useAuthStore((state) => state.user);
+  const { data: roles = [] } = useRoles();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRoleMenuOpen, setIsRoleMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const assignableRoles = roles.filter((r) => r.name !== 'owner');
 
   const isCurrentUser = currentUser?._id === member._id;
   const isOwner = member.role === 'owner';
@@ -102,7 +106,10 @@ export function MemberRow({ member, onRoleChange, onRemove }: MemberRowProps) {
 
                 {isRoleMenuOpen && (
                   <div className="border-t border-border py-1">
-                    {ROLE_OPTIONS.map((option) => (
+                    {(assignableRoles.length > 0
+                      ? assignableRoles.map((r) => ({ value: r.name as UserRole, label: r.name }))
+                      : FALLBACK_ROLE_OPTIONS
+                    ).map((option) => (
                       <button
                         key={option.value}
                         onClick={() => {

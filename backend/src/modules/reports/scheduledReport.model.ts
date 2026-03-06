@@ -1,7 +1,7 @@
 import { Schema, model, Types } from 'mongoose';
 import { applyBaseSchema, BaseDocument } from '@infrastructure/database/mongodb/baseModel';
 
-export type ReportFormat = 'csv' | 'json';
+export type ReportFormat = 'csv' | 'json' | 'pdf' | 'xlsx';
 export type ScheduledReportType =
   | 'task-metrics'
   | 'user-productivity'
@@ -45,7 +45,7 @@ const scheduledReportSchema = new Schema<IScheduledReport>({
   },
   format: {
     type: String,
-    enum: ['csv', 'json'],
+    enum: ['csv', 'json', 'pdf', 'xlsx'],
     default: 'csv',
   },
   cronExpression: {

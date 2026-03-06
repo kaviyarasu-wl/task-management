@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import { X, Loader2, RefreshCw } from 'lucide-react';
 import type { Task } from '@/shared/types/entities.types';
 import type { Project } from '@/shared/types/entities.types';
@@ -23,12 +24,7 @@ interface TaskFormModalProps {
   initialStatusId?: string; // For creating task in a specific column
 }
 
-const PRIORITY_OPTIONS: { value: TaskPriority; label: string }[] = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'urgent', label: 'Urgent' },
-];
+const PRIORITY_VALUES: TaskPriority[] = ['low', 'medium', 'high', 'urgent'];
 
 export function TaskFormModal({
   isOpen,
@@ -39,6 +35,7 @@ export function TaskFormModal({
   isLoading = false,
   initialStatusId,
 }: TaskFormModalProps) {
+  const { t } = useTranslation('tasks');
   const statuses = useStatuses();
   const defaultStatus = useDefaultStatus();
   const { data: membersData } = useMembers();
@@ -108,7 +105,11 @@ export function TaskFormModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className={cn(
+      'fixed inset-0 z-50',
+      'flex flex-col',
+      'md:flex md:items-center md:justify-center md:p-4'
+    )}>
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50"
@@ -117,15 +118,23 @@ export function TaskFormModal({
       />
 
       {/* Modal */}
-      <div className="relative z-10 w-full max-w-lg rounded-lg border border-border bg-background p-6 shadow-lg">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+      <div className={cn(
+        'relative z-10 w-full bg-background shadow-lg',
+        'h-full overflow-y-auto',
+        'md:h-auto md:max-h-[90vh] md:max-w-lg md:rounded-lg md:border md:border-border'
+      )}>
+        {/* Header - sticky on mobile */}
+        <div className={cn(
+          'flex items-center justify-between',
+          'sticky top-0 z-10 bg-background/95 backdrop-blur-sm',
+          'border-b border-border p-4 md:relative md:border-b md:p-6'
+        )}>
           <h2 className="text-lg font-semibold text-foreground">
-            {task ? 'Edit Task' : 'Create Task'}
+            {task ? t('edit') : t('create')}
           </h2>
           <button
             onClick={onClose}
-            className="rounded p-1 hover:bg-muted"
+            className="rounded p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-muted"
             aria-label="Close modal"
           >
             <X className="h-5 w-5 text-muted-foreground" />
@@ -133,11 +142,11 @@ export function TaskFormModal({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-4 md:p-6 space-y-4">
           {/* Title */}
           <div>
             <label htmlFor="title" className="block text-sm font-medium text-foreground">
-              Title *
+              {t('form.title')} *
             </label>
             <input
               id="title"
@@ -148,7 +157,7 @@ export function TaskFormModal({
                 'focus:outline-none focus:ring-2 focus:ring-primary/50',
                 errors.title && 'border-destructive'
               )}
-              placeholder="Enter task title"
+              placeholder={t('form.titlePlaceholder')}
             />
             {errors.title && (
               <p className="mt-1 text-sm text-destructive">{errors.title.message}</p>
@@ -158,7 +167,7 @@ export function TaskFormModal({
           {/* Description */}
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-foreground">
-              Description
+              {t('form.description')}
             </label>
             <textarea
               id="description"
@@ -168,15 +177,15 @@ export function TaskFormModal({
                 'mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm',
                 'focus:outline-none focus:ring-2 focus:ring-primary/50'
               )}
-              placeholder="Enter task description"
+              placeholder={t('form.descriptionPlaceholder')}
             />
           </div>
 
           {/* Project & Status */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="projectId" className="block text-sm font-medium text-foreground">
-                Project *
+                {t('form.project')} *
               </label>
               <select
                 id="projectId"
@@ -200,7 +209,7 @@ export function TaskFormModal({
 
             <div>
               <label htmlFor="statusId" className="block text-sm font-medium text-foreground">
-                Status
+                {t('form.status')}
               </label>
               <select
                 id="statusId"
@@ -220,10 +229,10 @@ export function TaskFormModal({
           </div>
 
           {/* Priority & Due Date */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="priority" className="block text-sm font-medium text-foreground">
-                Priority
+                {t('form.priority')}
               </label>
               <select
                 id="priority"
@@ -233,9 +242,9 @@ export function TaskFormModal({
                   'focus:outline-none focus:ring-2 focus:ring-primary/50'
                 )}
               >
-                {PRIORITY_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
+                {PRIORITY_VALUES.map((value) => (
+                  <option key={value} value={value}>
+                    {t(`priority.${value}`)}
                   </option>
                 ))}
               </select>
@@ -243,7 +252,7 @@ export function TaskFormModal({
 
             <div>
               <label htmlFor="dueDate" className="block text-sm font-medium text-foreground">
-                Due Date
+                {t('form.dueDate')}
               </label>
               <input
                 id="dueDate"
@@ -260,7 +269,7 @@ export function TaskFormModal({
           {/* Tags */}
           <div>
             <label htmlFor="tags" className="block text-sm font-medium text-foreground">
-              Tags
+              {t('form.tags')}
             </label>
             <input
               id="tags"
@@ -270,16 +279,16 @@ export function TaskFormModal({
                 'mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm',
                 'focus:outline-none focus:ring-2 focus:ring-primary/50'
               )}
-              placeholder="Enter tags separated by commas"
+              placeholder={t('form.tagsPlaceholder')}
             />
             <p className="mt-1 text-xs text-muted-foreground">
-              Separate multiple tags with commas
+              {t('form.tagsHint')}
             </p>
           </div>
 
           {/* Assignee */}
           <div>
-            <label className="block text-sm font-medium text-foreground">Assignee</label>
+            <label className="block text-sm font-medium text-foreground">{t('form.assignee')}</label>
             <Controller
               name="assigneeId"
               control={control}
@@ -288,7 +297,7 @@ export function TaskFormModal({
                   users={members}
                   value={field.value}
                   onChange={field.onChange}
-                  placeholder="Unassigned"
+                  placeholder={t('form.unassigned')}
                   allowClear
                   className="mt-1"
                 />
@@ -313,7 +322,7 @@ export function TaskFormModal({
                 className="h-4 w-4 rounded border-border text-primary focus:ring-primary/50"
               />
               <RefreshCw className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">Repeat task</span>
+              <span className="text-sm font-medium text-foreground">{t('form.recurrence')}</span>
             </label>
 
             {showRecurrence && (
@@ -347,23 +356,28 @@ export function TaskFormModal({
             )}
           </div>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4">
+          {/* Actions - sticky on mobile */}
+          <div className={cn(
+            'flex justify-end gap-3 pt-4',
+            'sticky bottom-0 bg-background/95 backdrop-blur-sm',
+            'border-t border-border pb-4 -mx-4 px-4',
+            'md:relative md:border-0 md:mx-0 md:px-0 md:pb-0'
+          )}>
             <button
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50"
+              className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50 min-h-[44px]"
             >
-              Cancel
+              {t('common:actions.cancel')}
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 min-h-[44px]"
             >
               {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {task ? 'Update' : 'Create'}
+              {task ? t('common:actions.update') : t('common:actions.create')}
             </button>
           </div>
         </form>

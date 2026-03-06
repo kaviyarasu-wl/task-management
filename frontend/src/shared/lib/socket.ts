@@ -2,6 +2,7 @@ import { io, Socket } from 'socket.io-client';
 import { config } from '@/shared/constants/config';
 import type { Status } from '@/features/statuses/types/status.types';
 import type { Activity } from '@/features/activity/types/activity.types';
+import type { Notification } from '@/features/notifications/types/notification.types';
 
 let socket: Socket | null = null;
 
@@ -34,6 +35,9 @@ export interface SocketEvents {
   'presence:user_online': { userId: string };
   'presence:user_offline': { userId: string };
   'presence:users_list': { users: Array<{ userId: string; lastSeen: string }> };
+
+  // Notification events
+  'notification:new': { notification: Notification };
 
   // Connection events
   'connect': void;

@@ -1,6 +1,10 @@
 import { Worker, Processor, Job } from 'bullmq';
 import { getBullMQConnection } from '../../redis/client';
 import { DigestJobData } from '../queues';
+import { createLogger } from '@infrastructure/logger';
+import { queueJobTotal, queueJobDuration } from '@infrastructure/metrics';
+
+const log = createLogger('DigestWorker');
 
 export function createDigestWorker(processor: Processor<DigestJobData>): Worker<DigestJobData> {
   const worker = new Worker<DigestJobData>('digest', processor, {
@@ -9,15 +13,20 @@ export function createDigestWorker(processor: Processor<DigestJobData>): Worker<
   });
 
   worker.on('completed', (job: Job) => {
-    console.log(`[DigestWorker] Job ${job.id} completed`);
+    log.info({ jobId: job.id }, 'Job completed');
+    queueJobTotal.inc({ queue: 'digest', status: 'completed' });
+    if (job.processedOn && job.finishedOn) {
+      queueJobDuration.observe({ queue: 'digest' }, (job.finishedOn - job.processedOn) / 1000);
+    }
   });
 
   worker.on('failed', (job: Job | undefined, err: Error) => {
-    console.error(`[DigestWorker] Job ${job?.id} failed:`, err.message);
+    log.error({ jobId: job?.id, err }, 'Job failed');
+    queueJobTotal.inc({ queue: 'digest', status: 'failed' });
   });
 
   worker.on('error', (err: Error) => {
-    console.error('[DigestWorker] Worker error:', err);
+    log.error({ err }, 'Worker error');
   });
 
   return worker;

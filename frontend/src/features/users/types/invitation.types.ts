@@ -19,7 +19,7 @@ export interface Invitation {
 
 export interface CreateInvitationDTO {
   email: string;
-  role: InvitationRole;
+  role: InvitationRole | string;
 }
 
 export interface AcceptInvitationDTO {

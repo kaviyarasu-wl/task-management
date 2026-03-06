@@ -22,8 +22,22 @@ import {
   exportVelocityCSV,
 } from './export/csv.exporter';
 import { exportToJSON } from './export/json.exporter';
+import {
+  exportTaskMetricsPDF,
+  exportUserProductivityPDF,
+  exportTeamWorkloadPDF,
+  exportProjectSummaryPDF,
+  exportVelocityPDF,
+} from './export/pdf.generator';
+import {
+  exportTaskMetricsExcel,
+  exportUserProductivityExcel,
+  exportTeamWorkloadExcel,
+  exportProjectSummaryExcel,
+  exportVelocityExcel,
+} from './export/excel.generator';
 import { emailQueue } from '@infrastructure/queue/queues';
-import type { TaskMetrics, UserProductivity, TeamWorkload, DateRange } from './reports.types';
+import type { TaskMetrics, UserProductivity, TeamWorkload, ProjectSummary, VelocityReport, DateRange } from './reports.types';
 
 export interface CreateScheduledReportDTO {
   name: string;
@@ -45,7 +59,7 @@ export interface UpdateScheduledReportDTO {
 }
 
 export interface GeneratedReport {
-  content: string;
+  content: string | Buffer;
   filename: string;
   mimeType: string;
 }
@@ -197,6 +211,7 @@ export class ScheduledReportService {
           email: 'system@scheduled-report.internal',
           role: 'admin',
           requestId: `scheduled-report-${report._id}-${Date.now()}`,
+          locale: 'en',
         },
         () => this.generateReport(report)
       );
@@ -216,7 +231,9 @@ export class ScheduledReportService {
             },
             attachment: {
               filename,
-              content: Buffer.from(content).toString('base64'),
+              content: Buffer.isBuffer(content)
+                ? content.toString('base64')
+                : Buffer.from(content).toString('base64'),
               encoding: 'base64',
               contentType: mimeType,
             },
@@ -255,62 +272,75 @@ export class ScheduledReportService {
     };
 
     const timestamp = new Date().toISOString().split('T')[0];
-    const mimeType = report.format === 'csv' ? 'text/csv' : 'application/json';
+    const mimeType = this.resolveMimeType(report.format);
+    const extension = report.format === 'xlsx' ? 'xlsx' : report.format;
 
-    let data: unknown;
-    let content: string;
+    let content: string | Buffer;
     let filename: string;
 
     switch (report.reportType) {
       case 'task-metrics': {
-        data = await this.reportsService.getTaskMetrics(filters);
-        content =
-          report.format === 'csv'
-            ? exportTaskMetricsCSV(data as TaskMetrics)
-            : exportToJSON(data, { reportType: 'task-metrics' }, { prettyPrint: true });
-        filename = `task-metrics-${timestamp}.${report.format}`;
+        const taskMetrics = await this.reportsService.getTaskMetrics(filters);
+        content = await this.formatReportContent(
+          report.format,
+          () => exportTaskMetricsCSV(taskMetrics),
+          () => exportToJSON(taskMetrics, { reportType: 'task-metrics' }, { prettyPrint: true }),
+          () => exportTaskMetricsPDF(taskMetrics),
+          () => exportTaskMetricsExcel(taskMetrics)
+        );
+        filename = `task-metrics-${timestamp}.${extension}`;
         break;
       }
 
       case 'user-productivity': {
-        data = await this.reportsService.getUserProductivity(dateRange);
-        content =
-          report.format === 'csv'
-            ? exportUserProductivityCSV(data as UserProductivity[])
-            : exportToJSON(data, undefined, { prettyPrint: true });
-        filename = `user-productivity-${timestamp}.${report.format}`;
+        const productivity = await this.reportsService.getUserProductivity(dateRange);
+        content = await this.formatReportContent(
+          report.format,
+          () => exportUserProductivityCSV(productivity),
+          () => exportToJSON(productivity, undefined, { prettyPrint: true }),
+          () => exportUserProductivityPDF(productivity),
+          () => exportUserProductivityExcel(productivity)
+        );
+        filename = `user-productivity-${timestamp}.${extension}`;
         break;
       }
 
       case 'team-workload': {
-        data = await this.reportsService.getTeamWorkload();
-        content =
-          report.format === 'csv'
-            ? exportTeamWorkloadCSV(data as TeamWorkload[])
-            : exportToJSON(data, undefined, { prettyPrint: true });
-        filename = `team-workload-${timestamp}.${report.format}`;
+        const workload = await this.reportsService.getTeamWorkload();
+        content = await this.formatReportContent(
+          report.format,
+          () => exportTeamWorkloadCSV(workload),
+          () => exportToJSON(workload, undefined, { prettyPrint: true }),
+          () => exportTeamWorkloadPDF(workload),
+          () => exportTeamWorkloadExcel(workload)
+        );
+        filename = `team-workload-${timestamp}.${extension}`;
         break;
       }
 
       case 'project-summary': {
         const projectSummaries = await this.reportsService.getProjectSummaries();
-        data = projectSummaries;
-        content =
-          report.format === 'csv'
-            ? exportProjectSummaryCSV(projectSummaries)
-            : exportToJSON(data, undefined, { prettyPrint: true });
-        filename = `project-summary-${timestamp}.${report.format}`;
+        content = await this.formatReportContent(
+          report.format,
+          () => exportProjectSummaryCSV(projectSummaries),
+          () => exportToJSON(projectSummaries, undefined, { prettyPrint: true }),
+          () => exportProjectSummaryPDF(projectSummaries),
+          () => exportProjectSummaryExcel(projectSummaries)
+        );
+        filename = `project-summary-${timestamp}.${extension}`;
         break;
       }
 
       case 'velocity': {
         const velocityReport = await this.reportsService.getVelocityReport('weekly');
-        data = velocityReport;
-        content =
-          report.format === 'csv'
-            ? exportVelocityCSV(velocityReport)
-            : exportToJSON(data, undefined, { prettyPrint: true });
-        filename = `velocity-${timestamp}.${report.format}`;
+        content = await this.formatReportContent(
+          report.format,
+          () => exportVelocityCSV(velocityReport),
+          () => exportToJSON(velocityReport, undefined, { prettyPrint: true }),
+          () => exportVelocityPDF(velocityReport),
+          () => exportVelocityExcel(velocityReport)
+        );
+        filename = `velocity-${timestamp}.${extension}`;
         break;
       }
 
@@ -319,6 +349,38 @@ export class ScheduledReportService {
     }
 
     return { content, filename, mimeType };
+  }
+
+  private async formatReportContent(
+    format: string,
+    csvFn: () => string,
+    jsonFn: () => string,
+    pdfFn: () => Promise<Buffer>,
+    excelFn: () => Promise<Buffer>
+  ): Promise<string | Buffer> {
+    switch (format) {
+      case 'pdf':
+        return pdfFn();
+      case 'xlsx':
+        return excelFn();
+      case 'json':
+        return jsonFn();
+      default:
+        return csvFn();
+    }
+  }
+
+  private resolveMimeType(format: string): string {
+    switch (format) {
+      case 'pdf':
+        return 'application/pdf';
+      case 'xlsx':
+        return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      case 'json':
+        return 'application/json';
+      default:
+        return 'text/csv';
+    }
   }
 
   /**

@@ -4,6 +4,10 @@ import jwt from 'jsonwebtoken';
 import { config } from '../../config';
 import { JwtAccessPayload } from '@modules/auth/auth.types';
 import { EventBus } from '@core/events/EventBus';
+import { createLogger } from '@infrastructure/logger';
+import { wsConnectionsActive } from '@infrastructure/metrics';
+
+const log = createLogger('WebSocket');
 
 let io: SocketServer | null = null;
 
@@ -42,16 +46,18 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
 
   io.on('connection', (socket) => {
     const user = socket.data['user'] as JwtAccessPayload;
+    wsConnectionsActive.inc();
 
     // Each tenant has a room — all task updates go to tenant room
     void socket.join(`tenant:${user.tenantId}`);
     // Each user has a personal room for direct messages
     void socket.join(`user:${user.userId}`);
 
-    console.log(`[WS] User ${user.userId} connected (tenant: ${user.tenantId})`);
+    log.info({ userId: user.userId, tenantId: user.tenantId }, 'User connected');
 
     socket.on('disconnect', () => {
-      console.log(`[WS] User ${user.userId} disconnected`);
+      wsConnectionsActive.dec();
+      log.info({ userId: user.userId }, 'User disconnected');
     });
   });
 
@@ -100,6 +106,11 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
   });
 
   // Comment events — broadcast to users viewing the task
+  // Notification events — push to individual user room
+  EventBus.on('notification.created', async ({ notificationId, userId }) => {
+    io?.to(`user:${userId}`).emit('notification:new', { notificationId });
+  });
+
   EventBus.on('comment.created', async ({ commentId, taskId, tenantId, mentions }) => {
     io?.to(`tenant:${tenantId}`).emit('comment:created', { commentId, taskId });
     // Notify mentioned users directly
@@ -116,7 +127,7 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
     io?.to(`tenant:${tenantId}`).emit('comment:deleted', { commentId, taskId });
   });
 
-  console.log('✅ WebSocket server initialized');
+  log.info('WebSocket server initialized');
   return io;
 }
 

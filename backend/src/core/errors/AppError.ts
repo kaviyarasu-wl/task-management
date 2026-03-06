@@ -1,3 +1,5 @@
+import { t } from '@infrastructure/i18n/i18n';
+
 export class AppError extends Error {
   public readonly statusCode: number;
   public readonly isOperational: boolean;
@@ -20,19 +22,19 @@ export class AppError extends Error {
 
 export class NotFoundError extends AppError {
   constructor(resource: string) {
-    super(`${resource} not found`, 404, 'NOT_FOUND');
+    super(t('common.notFound', { resource }), 404, 'NOT_FOUND');
   }
 }
 
 export class UnauthorizedError extends AppError {
-  constructor(message = 'Unauthorized') {
-    super(message, 401, 'UNAUTHORIZED');
+  constructor(message?: string) {
+    super(message ?? t('common.unauthorized'), 401, 'UNAUTHORIZED');
   }
 }
 
 export class ForbiddenError extends AppError {
-  constructor(message = 'Forbidden') {
-    super(message, 403, 'FORBIDDEN');
+  constructor(message?: string) {
+    super(message ?? t('common.forbidden'), 403, 'FORBIDDEN');
   }
 }
 
@@ -40,14 +42,14 @@ export class ValidationError extends AppError {
   public readonly errors: Record<string, string[]>;
 
   constructor(errors: Record<string, string[]>) {
-    super('Validation failed', 422, 'VALIDATION_ERROR');
+    super(t('common.validationFailed'), 422, 'VALIDATION_ERROR');
     this.errors = errors;
   }
 }
 
 export class BadRequestError extends AppError {
-  constructor(message: string) {
-    super(message, 400, 'BAD_REQUEST');
+  constructor(message?: string) {
+    super(message ?? t('common.badRequest'), 400, 'BAD_REQUEST');
   }
 }
 
@@ -58,8 +60,8 @@ export class ConflictError extends AppError {
 }
 
 export class TooManyRequestsError extends AppError {
-  constructor(message = 'Too many requests') {
-    super(message, 429, 'RATE_LIMIT_EXCEEDED');
+  constructor(message?: string) {
+    super(message ?? t('common.tooManyRequests'), 429, 'RATE_LIMIT_EXCEEDED');
   }
 }
 
@@ -69,7 +71,7 @@ export class TransitionNotAllowedError extends AppError {
 
   constructor(fromStatus: string, toStatus: string) {
     super(
-      `Transition from "${fromStatus}" to "${toStatus}" is not allowed`,
+      t('task.transitionNotAllowed', { from: fromStatus, to: toStatus }),
       400,
       'TRANSITION_NOT_ALLOWED'
     );

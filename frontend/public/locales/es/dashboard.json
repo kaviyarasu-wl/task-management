@@ -1,0 +1,13 @@
+{
+  "title": "Panel",
+  "welcome": "Bienvenido de nuevo, {{name}}",
+  "stats": {
+    "totalTasks": "Total de tareas",
+    "completedToday": "Completadas hoy",
+    "overdue": "Vencidas",
+    "upcomingDeadlines": "Próximos vencimientos"
+  },
+  "recentActivity": "Actividad reciente",
+  "myTasks": "Mis tareas",
+  "teamOverview": "Resumen del equipo"
+}

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Calendar, MessageSquare, RefreshCw } from 'lucide-react';
@@ -14,7 +15,7 @@ interface TaskCardProps {
   isDragging?: boolean;
 }
 
-export function TaskCard({ task, onClick, isDragging }: TaskCardProps) {
+export const TaskCard = memo(function TaskCard({ task, onClick, isDragging }: TaskCardProps) {
   const {
     attributes,
     listeners,
@@ -125,4 +126,5 @@ export function TaskCard({ task, onClick, isDragging }: TaskCardProps) {
       </div>
     </div>
   );
-}
+});
+TaskCard.displayName = 'TaskCard';

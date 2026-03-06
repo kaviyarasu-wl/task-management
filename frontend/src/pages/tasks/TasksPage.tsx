@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Plus, Loader2 } from 'lucide-react';
 import { useTasks } from '@/features/tasks/hooks/useTasks';
 import { useCreateTask, useUpdateTask, useDeleteTask } from '@/features/tasks/hooks/useTaskMutations';
@@ -13,19 +13,44 @@ import { BulkActionBar } from '@/features/tasks/components/BulkActionBar';
 import { ViewToggle, type ViewMode } from '@/features/tasks/components/ViewToggle';
 import { useSelectionStore } from '@/features/tasks/stores/selectionStore';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
+import { ExportDropdown } from '@/shared/components/ExportDropdown';
+import { ExportProgressModal } from '@/shared/components/ExportProgressModal';
+import { useFilterParams } from '@/shared/hooks/useFilterParams';
+import { useExport } from '@/shared/hooks/useExport';
+import { SavedViewsDropdown } from '@/features/saved-views/components/SavedViewsDropdown';
+import { useSavedViews } from '@/features/saved-views/hooks/useSavedViews';
+import type { SavedViewFilters } from '@/features/saved-views/types/savedView.types';
 import type { Task } from '@/shared/types/entities.types';
 import type { TaskPriority } from '@/shared/types/api.types';
 import type { CreateTaskFormData } from '@/features/tasks/validators/task.validators';
 import type { RecurrencePattern } from '@/features/tasks/types/recurrence.types';
+import { ResponsiveTable } from '@/shared/components/ResponsiveTable';
 
 export function TasksPage() {
+  // Export
+  const { startExport, isExporting, progress, jobId, format, cancelExport } = useExport();
+
   // View mode
   const [viewMode, setViewMode] = useState<ViewMode>('list');
 
-  // Filters
-  const [selectedProjectId, setSelectedProjectId] = useState<string>();
-  const [selectedStatusId, setSelectedStatusId] = useState<string>();
-  const [selectedPriority, setSelectedPriority] = useState<TaskPriority>();
+  // Filters (URL-synced)
+  const FILTER_KEYS = ['projectId', 'statusId', 'priority', 'assigneeId'] as const;
+  const { filters, setFilter, setFilters, clearFilters, hasActiveFilters } =
+    useFilterParams<Record<typeof FILTER_KEYS[number], string | undefined>>(FILTER_KEYS);
+
+  // Apply default saved view on initial load when no URL params are present
+  const { data: savedViews = [] } = useSavedViews();
+  const [hasAppliedDefault, setHasAppliedDefault] = useState(false);
+
+  useEffect(() => {
+    if (!hasAppliedDefault && !hasActiveFilters && savedViews.length > 0) {
+      const defaultView = savedViews.find((v) => v.isDefault);
+      if (defaultView) {
+        setFilters(defaultView.filters);
+      }
+      setHasAppliedDefault(true);
+    }
+  }, [savedViews, hasActiveFilters, hasAppliedDefault, setFilters]);
 
   // Modals
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -50,10 +75,11 @@ export function TasksPage() {
   const projects = projectsData?.pages.flatMap((p) => p.data) ?? [];
 
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useTasks({
-    projectId: selectedProjectId,
-    statusId: viewMode === 'board' ? undefined : selectedStatusId, // Board shows all statuses
-    priority: selectedPriority,
-    limit: viewMode === 'board' ? 100 : 20, // Load more for board view
+    projectId: filters.projectId,
+    statusId: viewMode === 'board' ? undefined : filters.statusId,
+    priority: filters.priority as TaskPriority | undefined,
+    assigneeId: filters.assigneeId,
+    limit: viewMode === 'board' ? 100 : 20,
   });
 
   const tasks = data?.pages.flatMap((p) => p.data) ?? [];
@@ -142,25 +168,33 @@ export function TasksPage() {
     }
   };
 
-  const clearFilters = () => {
-    setSelectedProjectId(undefined);
-    setSelectedStatusId(undefined);
-    setSelectedPriority(undefined);
-  };
-
   return (
     <div className="flex h-full flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header - stack on mobile */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold text-foreground">Tasks</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <SavedViewsDropdown
+            currentFilters={filters as SavedViewFilters}
+            onApplyView={(viewFilters) => setFilters(viewFilters)}
+          />
+          <ExportDropdown
+            exportType="tasks"
+            filters={{
+              projectId: filters.projectId,
+              statusId: filters.statusId,
+              priority: filters.priority,
+            }}
+            onExport={startExport}
+          />
           <ViewToggle value={viewMode} onChange={setViewMode} />
           <button
             onClick={() => handleCreate()}
-            className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90"
+            className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 min-h-[44px]"
           >
             <Plus className="h-4 w-4" />
-            New Task
+            <span className="hidden sm:inline">New Task</span>
+            <span className="sm:hidden">New</span>
           </button>
         </div>
       </div>
@@ -169,12 +203,12 @@ export function TasksPage() {
       <div className="mt-4">
         <TaskFilters
           projects={projects}
-          selectedProjectId={selectedProjectId}
-          selectedStatusId={viewMode === 'list' ? selectedStatusId : undefined}
-          selectedPriority={selectedPriority}
-          onProjectChange={setSelectedProjectId}
-          onStatusChange={viewMode === 'list' ? setSelectedStatusId : () => {}}
-          onPriorityChange={setSelectedPriority}
+          selectedProjectId={filters.projectId}
+          selectedStatusId={viewMode === 'list' ? filters.statusId : undefined}
+          selectedPriority={filters.priority as TaskPriority | undefined}
+          onProjectChange={(id) => setFilter('projectId', id)}
+          onStatusChange={viewMode === 'list' ? (id) => setFilter('statusId', id) : () => {}}
+          onPriorityChange={(p) => setFilter('priority', p)}
           onClearAll={clearFilters}
         />
       </div>
@@ -208,7 +242,8 @@ export function TasksPage() {
         </div>
       ) : (
         <div className="mt-6 rounded-lg border border-border bg-background">
-          <table className="w-full">
+          <ResponsiveTable>
+          <table className="w-full min-w-[600px]">
             <thead>
               <tr className="border-b border-border text-left text-sm text-muted-foreground">
                 <th className="w-10 px-4 py-3">
@@ -246,6 +281,7 @@ export function TasksPage() {
               ))}
             </tbody>
           </table>
+          </ResponsiveTable>
 
           {hasNextPage && (
             <div className="border-t border-border p-4 text-center">
@@ -298,6 +334,15 @@ export function TasksPage() {
 
       {/* Bulk Actions */}
       <BulkActionBar />
+
+      {/* Export Progress */}
+      <ExportProgressModal
+        isOpen={isExporting && !!jobId}
+        onClose={() => {}}
+        onCancel={cancelExport}
+        progress={progress}
+        format={format}
+      />
     </div>
   );
 }

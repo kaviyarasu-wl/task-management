@@ -224,4 +224,35 @@ export class TaskService {
 
     await EventBus.emit('task.deleted', { taskId, tenantId, deletedBy: userId });
   }
+
+  async addAttachment(
+    taskId: string,
+    attachment: { filename: string; url: string }
+  ): Promise<ITask | ITaskWithStatus> {
+    const { tenantId } = RequestContext.get();
+
+    const task = await this.repo.findById(tenantId, taskId);
+    if (!task) throw new NotFoundError('Task');
+
+    const updated = await this.repo.addAttachment(tenantId, taskId, {
+      filename: attachment.filename,
+      url: attachment.url,
+      uploadedAt: new Date(),
+    });
+    if (!updated) throw new NotFoundError('Task');
+
+    return updated;
+  }
+
+  async removeAttachment(taskId: string, filename: string): Promise<ITask | ITaskWithStatus> {
+    const { tenantId } = RequestContext.get();
+
+    const task = await this.repo.findById(tenantId, taskId);
+    if (!task) throw new NotFoundError('Task');
+
+    const updated = await this.repo.removeAttachment(tenantId, taskId, filename);
+    if (!updated) throw new NotFoundError('Task');
+
+    return updated;
+  }
 }

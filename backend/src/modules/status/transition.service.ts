@@ -3,6 +3,9 @@ import { IStatusDocument } from './status.model';
 import { Task } from '../task/task.model';
 import { cache } from '@infrastructure/redis/cache';
 import { RequestContext } from '@core/context/RequestContext';
+import { createLogger } from '@infrastructure/logger';
+
+const log = createLogger('TransitionService');
 import { NotFoundError, ValidationError, TransitionNotAllowedError } from '@core/errors/AppError';
 import { TransitionMatrix, TransitionValidationResult } from '../../types/status.types';
 
@@ -283,7 +286,7 @@ export class TransitionService {
     try {
       await cache.del(transitionMatrixCacheKey(tenantId));
     } catch {
-      console.warn(`Failed to invalidate transition cache for tenant ${tenantId}`);
+      log.warn({ tenantId }, 'Failed to invalidate transition cache');
     }
   }
 }

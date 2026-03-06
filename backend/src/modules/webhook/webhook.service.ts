@@ -214,13 +214,13 @@ export class WebhookService {
       });
 
       // Queue for delivery with exponential backoff
+      // Use deliveryId as jobId to prevent duplicate sends
+      const deliveryId = delivery._id?.toString() ?? '';
       await webhookQueue.add(
         'deliver',
+        { deliveryId, tenantId },
         {
-          deliveryId: delivery._id?.toString() ?? '',
-          tenantId,
-        },
-        {
+          jobId: `webhook:${deliveryId}`,
           attempts: 5,
           backoff: {
             type: 'exponential',

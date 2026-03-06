@@ -32,6 +32,14 @@ export type PlanFeature = (typeof PLAN_FEATURES)[number];
 
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 
+export type NotificationType =
+  | 'task.assigned'
+  | 'task.completed'
+  | 'comment.mention'
+  | 'user.invited'
+  | 'project.updated'
+  | 'task.due_soon';
+
 /**
  * @deprecated Use dynamic statuses from Status model instead.
  * Tasks now use status: ObjectId reference to Status collection.
@@ -41,6 +49,9 @@ export type TaskStatusLegacy = 'todo' | 'in_progress' | 'review' | 'done' | 'can
 
 // Status types for dynamic status management
 export * from './status.types';
+
+// Re-export Permission type from role module for convenience
+export type { Permission } from '@modules/role/permissions';
 
 /**
  * Task with fully populated status object.

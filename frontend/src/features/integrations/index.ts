@@ -33,3 +33,50 @@ export type {
   CreateWebhookFormData,
   UpdateWebhookFormData,
 } from './validators/webhook.validators';
+
+// Integration marketplace components
+export { IntegrationCard } from './components/IntegrationCard';
+export { IntegrationConfigModal } from './components/IntegrationConfigModal';
+export { IntegrationGrid } from './components/IntegrationGrid';
+export { IntegrationStatusBadge } from './components/IntegrationStatusBadge';
+export { IntegrationEventLog } from './components/IntegrationEventLog';
+export { OAuthCallback } from './components/OAuthCallback';
+
+// Integration hooks
+export {
+  useIntegrationProviders,
+  useIntegrationConnections,
+  useIntegrationEvents,
+  integrationKeys,
+} from './hooks/useIntegrations';
+export {
+  useConnectIntegration,
+  useCompleteOAuth,
+  useDisconnectIntegration,
+  useUpdateIntegrationConfig,
+} from './hooks/useIntegrationMutations';
+
+// Integration types
+export type {
+  IntegrationProvider,
+  IntegrationConnection,
+  IntegrationEvent,
+  ConnectionStatus,
+  IntegrationProviderId,
+  ConfigField,
+  ConnectProviderResponse,
+} from './types/integration.types';
+export { PROVIDER_LOGOS } from './types/integration.types';
+
+// Integration validators
+export {
+  slackConfigSchema,
+  githubConfigSchema,
+  jiraConfigSchema,
+  PROVIDER_CONFIG_SCHEMAS,
+} from './validators/integration.validators';
+export type {
+  SlackConfig,
+  GitHubConfig,
+  JiraConfig,
+} from './validators/integration.validators';

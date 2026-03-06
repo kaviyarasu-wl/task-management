@@ -9,6 +9,7 @@ import { InviteMemberModal } from '@/features/users/components/InviteMemberModal
 import { PendingInvitationRow } from '@/features/users/components/PendingInvitationRow';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { useAuthStore } from '@/features/auth';
+import { ResponsiveTable } from '@/shared/components/ResponsiveTable';
 import type { User } from '@/shared/types/entities.types';
 import type { UserRole } from '@/shared/types/api.types';
 
@@ -46,7 +47,7 @@ export function TeamPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Team</h1>
           {tenant && (
@@ -58,7 +59,7 @@ export function TeamPage() {
         {canInvite && (
           <button
             onClick={() => setShowInviteModal(true)}
-            className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 min-h-[44px]"
           >
             <UserPlus className="h-4 w-4" />
             Invite Member
@@ -67,7 +68,7 @@ export function TeamPage() {
       </div>
 
       {/* Team Stats */}
-      <div className="mt-6 grid gap-4 sm:grid-cols-4">
+      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {(['owner', 'admin', 'member', 'viewer'] as const).map((role) => {
           const count = members.filter((m) => m.role === role).length;
           return (
@@ -101,7 +102,8 @@ export function TeamPage() {
         </div>
       ) : (
         <div className="mt-6 rounded-lg border border-border bg-background">
-          <table className="w-full">
+          <ResponsiveTable>
+          <table className="w-full min-w-[600px]">
             <thead>
               <tr className="border-b border-border text-left text-sm text-muted-foreground">
                 <th className="px-4 py-3 font-medium">Member</th>
@@ -122,6 +124,7 @@ export function TeamPage() {
               ))}
             </tbody>
           </table>
+          </ResponsiveTable>
         </div>
       )}
 
@@ -133,7 +136,8 @@ export function TeamPage() {
             {pendingInvitations.length} invitation{pendingInvitations.length !== 1 ? 's' : ''} waiting for response
           </p>
           <div className="mt-4 rounded-lg border border-border bg-background">
-            <table className="w-full">
+            <ResponsiveTable>
+            <table className="w-full min-w-[500px]">
               <thead>
                 <tr className="border-b border-border text-left text-sm text-muted-foreground">
                   <th className="px-4 py-3 font-medium">Email</th>
@@ -155,6 +159,7 @@ export function TeamPage() {
                 ))}
               </tbody>
             </table>
+            </ResponsiveTable>
           </div>
         </div>
       )}

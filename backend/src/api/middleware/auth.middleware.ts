@@ -3,12 +3,24 @@ import jwt from 'jsonwebtoken';
 import { config } from '../../config';
 import { JwtAccessPayload } from '@modules/auth/auth.types';
 import { RequestContext } from '@core/context/RequestContext';
+import { createLogger } from '@infrastructure/logger';
+
+const log = createLogger('AuthMiddleware');
 import { UnauthorizedError, ForbiddenError, TooManyRequestsError } from '@core/errors/AppError';
 import { UserRole } from '../../types';
 import { randomUUID } from 'crypto';
 import { ApiKeyService } from '@modules/apiKey/apiKey.service';
 import { ApiKeyPermission } from '@modules/apiKey/apiKey.model';
 import { getRedisClient } from '@infrastructure/redis/client';
+
+// Augment Express Request with locale detected by locale middleware
+declare global {
+  namespace Express {
+    interface Request {
+      detectedLocale?: string;
+    }
+  }
+}
 
 // Augment Express Request with user property
 declare global {
@@ -93,7 +105,7 @@ async function authenticateWithApiKey(
     // Record usage asynchronously
     const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
     apiKeyService.recordUsage(apiKey._id.toString(), clientIp).catch((err) => {
-      console.error('Failed to record API key usage:', err);
+      log.error({ err }, 'Failed to record API key usage');
     });
 
     // Set request context for API key auth
@@ -104,6 +116,7 @@ async function authenticateWithApiKey(
         email: '',
         role: 'member',
         requestId: randomUUID(),
+        locale: req.detectedLocale ?? config.DEFAULT_LOCALE,
         apiKeyId: apiKey._id.toString(),
         permissions: apiKey.permissions,
       },
@@ -137,7 +150,9 @@ function authenticateWithJwt(req: Request, res: Response, next: NextFunction): v
         tenantId: payload.tenantId,
         email: payload.email,
         role: payload.role,
+        rolePermissions: payload.rolePermissions,
         requestId: randomUUID(),
+        locale: payload.locale ?? req.detectedLocale ?? config.DEFAULT_LOCALE,
       },
       () => next()
     );
@@ -209,4 +224,62 @@ export function requireApiPermission(permission: ApiKeyPermission) {
 
     next();
   };
+}
+
+/**
+ * Permission-based access control middleware for role permissions.
+ * Replaces requireRole() for granular access control.
+ *
+ * For JWT auth: checks user's role permissions (loaded from Role collection)
+ * For API key auth: maps to API key permission format and checks
+ *
+ * Example: router.post('/tasks', requirePermission('tasks.create'), ...)
+ */
+export function requirePermission(permission: string) {
+  return (_req: Request, _res: Response, next: NextFunction): void => {
+    const ctx = RequestContext.getOptional();
+    if (!ctx) {
+      next(new UnauthorizedError());
+      return;
+    }
+
+    // API key auth — map resource.action to resource:read/write format
+    if (ctx.apiKeyId) {
+      const apiPerm = mapToApiKeyPermission(permission);
+      if (!ctx.permissions?.includes(apiPerm as ApiKeyPermission)) {
+        next(new ForbiddenError(`Missing permission: ${permission}`));
+        return;
+      }
+      next();
+      return;
+    }
+
+    // JWT auth — check role permissions from context
+    if (ctx.rolePermissions) {
+      if (
+        ctx.rolePermissions.includes('*') ||
+        ctx.rolePermissions.includes(permission) ||
+        ctx.rolePermissions.includes(permission.split('.')[0] + '.*')
+      ) {
+        next();
+        return;
+      }
+      next(new ForbiddenError(`Missing permission: ${permission}`));
+      return;
+    }
+
+    // Fallback: allow owner/admin (backward compat before migration)
+    if (ctx.role === 'owner' || ctx.role === 'admin') {
+      next();
+      return;
+    }
+
+    next(new ForbiddenError(`Missing permission: ${permission}`));
+  };
+}
+
+function mapToApiKeyPermission(permission: string): string {
+  const [resource, action] = permission.split('.');
+  const readActions = ['read'];
+  return `${resource}:${readActions.includes(action) ? 'read' : 'write'}`;
 }

@@ -1,0 +1,36 @@
+name: Deploy
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: [test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build frontend
+        run: cd frontend && npm ci && npm run build
+
+      - name: Build Docker image
+        run: docker build -t app-backend:${{ github.sha }} -f backend/docker/Dockerfile backend/
+
+      - name: Push to registry
+        run: |
+          echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login -u "${{ secrets.REGISTRY_USER }}" --password-stdin
+          docker tag app-backend:${{ github.sha }} registry.example.com/app-backend:${{ github.sha }}
+          docker tag app-backend:${{ github.sha }} registry.example.com/app-backend:latest
+          docker push registry.example.com/app-backend:${{ github.sha }}
+          docker push registry.example.com/app-backend:latest
+
+      # SSH deploy or kubectl apply depending on infrastructure

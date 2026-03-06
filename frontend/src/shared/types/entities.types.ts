@@ -13,7 +13,10 @@ export interface User {
   firstName: string;
   lastName: string;
   role: UserRole;
+  permissions?: string[];
+  roleId?: string;
   isEmailVerified: boolean;
+  isMfaEnabled?: boolean;
   lastLoginAt?: string;
   tenantId: string;
   createdAt: string;

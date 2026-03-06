@@ -1,7 +1,12 @@
+import { useTranslation } from 'react-i18next';
 import { RegisterForm } from '@/features/auth/components/RegisterForm';
+import { OAuthButtons } from '@/features/auth/components/OAuthButtons';
+import { OAuthDivider } from '@/features/auth/components/OAuthDivider';
 import { config } from '@/shared/constants/config';
 
 export function RegisterPage() {
+  const { t } = useTranslation('auth');
+
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-lg">
@@ -9,9 +14,11 @@ export function RegisterPage() {
           <div className="mb-6 text-center">
             <h1 className="text-2xl font-bold text-foreground">{config.appName}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Create your account
+              {t('register.subtitle')}
             </p>
           </div>
+          <OAuthButtons mode="register" />
+          <OAuthDivider className="my-6" />
           <RegisterForm />
         </div>
       </div>

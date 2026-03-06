@@ -16,6 +16,7 @@ const mockContext = {
   email: 'test@example.com',
   role: 'member' as const,
   requestId: 'req-1',
+  locale: 'en',
 };
 
 describe('TaskService', () => {

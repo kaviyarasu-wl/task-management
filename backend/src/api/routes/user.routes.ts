@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { userController } from '@modules/user/user.controller';
-import { authMiddleware, requireRole } from '../middleware/auth.middleware';
+import { authMiddleware, requirePermission } from '../middleware/auth.middleware';
 import { asyncWrapper } from '@core/utils/asyncWrapper';
 
 const router = Router();
@@ -15,7 +15,7 @@ router.post('/me/change-password', asyncWrapper(userController.changePassword));
 // ─── Tenant user management ──────────────────────────────────────────────────
 router.get('/', asyncWrapper(userController.list));
 router.get('/:id', asyncWrapper(userController.getById));
-router.patch('/:id/role', requireRole(['owner', 'admin']), asyncWrapper(userController.updateRole));
-router.delete('/:id', requireRole(['owner', 'admin']), asyncWrapper(userController.deactivate));
+router.patch('/:id/role', requirePermission('members.update-role'), asyncWrapper(userController.updateRole));
+router.delete('/:id', requirePermission('members.remove'), asyncWrapper(userController.deactivate));
 
 export { router as userRouter };

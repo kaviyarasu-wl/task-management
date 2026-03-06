@@ -56,6 +56,7 @@ export async function impersonationContextMiddleware(
         email: user.email,
         role: 'owner', // Impersonate as owner for full access
         requestId: superAdmin.requestId,
+        locale: user.locale ?? 'en',
         isImpersonating: true,
         originalAdminId: superAdmin.superAdminId,
         impersonationLogId,

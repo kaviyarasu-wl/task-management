@@ -1,0 +1,19 @@
+name: Docker Build
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - 'backend/Dockerfile'
+      - 'backend/docker/**'
+      - 'backend/package*.json'
+      - 'backend/tsconfig.json'
+      - 'backend/src/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -t app-backend:test -f backend/docker/Dockerfile backend/

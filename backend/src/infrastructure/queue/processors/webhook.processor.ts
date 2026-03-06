@@ -4,6 +4,9 @@ import { WebhookJobData } from '../queues';
 import { WebhookRepository } from '@modules/webhook/webhook.repository';
 import { WebhookDeliveryRepository } from '@modules/webhook/webhookDelivery.repository';
 import { EventBus } from '@core/events/EventBus';
+import { createLogger } from '@infrastructure/logger';
+
+const log = createLogger('WebhookProcessor');
 
 const MAX_CONSECUTIVE_FAILURES = 10;
 const TIMEOUT_MS = 10000; // 10 second timeout
@@ -15,7 +18,7 @@ const TIMEOUT_MS = 10000; // 10 second timeout
 export async function webhookProcessor(job: Job<WebhookJobData>): Promise<void> {
   const { deliveryId, tenantId } = job.data;
 
-  console.log(`[WebhookProcessor] Processing delivery ${deliveryId}`);
+  log.info({ deliveryId }, 'Processing webhook delivery');
 
   const webhookRepo = new WebhookRepository();
   const deliveryRepo = new WebhookDeliveryRepository();
@@ -23,7 +26,7 @@ export async function webhookProcessor(job: Job<WebhookJobData>): Promise<void> 
   // Get delivery record
   const delivery = await deliveryRepo.findByIdWithoutTenant(deliveryId);
   if (!delivery) {
-    console.log(`[WebhookProcessor] Delivery ${deliveryId} not found, skipping`);
+    log.warn({ deliveryId }, 'Delivery not found, skipping');
     return;
   }
 
@@ -33,7 +36,7 @@ export async function webhookProcessor(job: Job<WebhookJobData>): Promise<void> 
     await deliveryRepo.markFailed(deliveryId, {
       error: 'Webhook not found',
     });
-    console.log(`[WebhookProcessor] Webhook not found for delivery ${deliveryId}`);
+    log.warn({ deliveryId }, 'Webhook not found for delivery');
     return;
   }
 
@@ -42,7 +45,7 @@ export async function webhookProcessor(job: Job<WebhookJobData>): Promise<void> 
     await deliveryRepo.markFailed(deliveryId, {
       error: 'Webhook is disabled',
     });
-    console.log(`[WebhookProcessor] Webhook is disabled for delivery ${deliveryId}`);
+    log.warn({ deliveryId }, 'Webhook is disabled for delivery');
     return;
   }
 
@@ -110,7 +113,7 @@ export async function webhookProcessor(job: Job<WebhookJobData>): Promise<void> 
           tenantId,
         });
 
-        console.log(`[WebhookProcessor] Delivery ${deliveryId} succeeded (${response.status}) in ${duration}ms`);
+        log.info({ deliveryId, statusCode: response.status, duration }, 'Delivery succeeded');
       } else {
         // HTTP error response
         throw new Error(`HTTP ${response.status}: ${responseBody.substring(0, 500)}`);
@@ -125,7 +128,7 @@ export async function webhookProcessor(job: Job<WebhookJobData>): Promise<void> 
     const currentAttempt = (job.attemptsMade ?? 0) + 1;
     const maxAttempts = job.opts?.attempts ?? 5;
 
-    console.error(`[WebhookProcessor] Delivery ${deliveryId} failed (attempt ${currentAttempt}/${maxAttempts}):`, errorMessage);
+    log.error({ deliveryId, attempt: currentAttempt, maxAttempts, err: error }, 'Delivery failed');
 
     if (currentAttempt >= maxAttempts) {
       // Final failure
@@ -140,7 +143,10 @@ export async function webhookProcessor(job: Job<WebhookJobData>): Promise<void> 
       // Auto-disable after too many consecutive failures
       if ((webhook.failureCount + 1) >= MAX_CONSECUTIVE_FAILURES) {
         await webhookRepo.disableWebhook(webhook._id?.toString() ?? '');
-        console.log(`[WebhookProcessor] Webhook ${webhook._id} auto-disabled after ${MAX_CONSECUTIVE_FAILURES} consecutive failures`);
+        log.warn(
+          { webhookId: webhook._id, maxFailures: MAX_CONSECUTIVE_FAILURES },
+          'Webhook auto-disabled after consecutive failures'
+        );
       }
 
       EventBus.emit('webhook.failed', {

@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   mainNavItems,
@@ -22,6 +23,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
+  const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
   const { data: tenant } = useTenantSettings();
 
@@ -127,7 +129,9 @@ interface SidebarNavItemProps {
 }
 
 function SidebarNavItem({ item, isCollapsed }: SidebarNavItemProps) {
+  const { t } = useTranslation();
   const Icon = item.icon;
+  const label = t(item.labelKey);
 
   return (
     <li>
@@ -150,7 +154,7 @@ function SidebarNavItem({ item, isCollapsed }: SidebarNavItemProps) {
             isCollapsed && 'justify-center px-2'
           )
         }
-        title={isCollapsed ? item.label : undefined}
+        title={isCollapsed ? label : undefined}
       >
         {({ isActive }) => (
           <>
@@ -168,7 +172,7 @@ function SidebarNavItem({ item, isCollapsed }: SidebarNavItemProps) {
                   animate="expanded"
                   exit="collapsed"
                 >
-                  {item.label}
+                  {label}
                 </motion.span>
               )}
             </AnimatePresence>

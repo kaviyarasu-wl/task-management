@@ -31,7 +31,7 @@ export function RegisterForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {error && (
-        <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+        <div role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
           {(error as any)?.response?.data?.message || 'Registration failed. Please try again.'}
         </div>
       )}
@@ -46,6 +46,9 @@ export function RegisterForm() {
             type="text"
             id="firstName"
             autoComplete="given-name"
+            aria-required="true"
+            aria-invalid={!!errors.firstName}
+            aria-describedby={errors.firstName ? 'firstName-error' : undefined}
             className={cn(
               'mt-1 block w-full rounded-md border border-border bg-background px-3 py-2',
               'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',
@@ -53,7 +56,7 @@ export function RegisterForm() {
             )}
           />
           {errors.firstName && (
-            <p className="mt-1 text-sm text-destructive">{errors.firstName.message}</p>
+            <p id="firstName-error" role="alert" className="mt-1 text-sm text-destructive">{errors.firstName.message}</p>
           )}
         </div>
 
@@ -66,6 +69,9 @@ export function RegisterForm() {
             type="text"
             id="lastName"
             autoComplete="family-name"
+            aria-required="true"
+            aria-invalid={!!errors.lastName}
+            aria-describedby={errors.lastName ? 'lastName-error' : undefined}
             className={cn(
               'mt-1 block w-full rounded-md border border-border bg-background px-3 py-2',
               'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',
@@ -73,7 +79,7 @@ export function RegisterForm() {
             )}
           />
           {errors.lastName && (
-            <p className="mt-1 text-sm text-destructive">{errors.lastName.message}</p>
+            <p id="lastName-error" role="alert" className="mt-1 text-sm text-destructive">{errors.lastName.message}</p>
           )}
         </div>
       </div>
@@ -87,6 +93,9 @@ export function RegisterForm() {
           type="email"
           id="email"
           autoComplete="email"
+          aria-required="true"
+          aria-invalid={!!errors.email}
+          aria-describedby={errors.email ? 'reg-email-error' : undefined}
           className={cn(
             'mt-1 block w-full rounded-md border border-border bg-background px-3 py-2',
             'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',
@@ -94,7 +103,7 @@ export function RegisterForm() {
           )}
         />
         {errors.email && (
-          <p className="mt-1 text-sm text-destructive">{errors.email.message}</p>
+          <p id="reg-email-error" role="alert" className="mt-1 text-sm text-destructive">{errors.email.message}</p>
         )}
       </div>
 
@@ -107,6 +116,9 @@ export function RegisterForm() {
           type="password"
           id="password"
           autoComplete="new-password"
+          aria-required="true"
+          aria-invalid={!!errors.password}
+          aria-describedby={errors.password ? 'reg-password-error reg-password-hint' : 'reg-password-hint'}
           className={cn(
             'mt-1 block w-full rounded-md border border-border bg-background px-3 py-2',
             'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',
@@ -114,9 +126,9 @@ export function RegisterForm() {
           )}
         />
         {errors.password && (
-          <p className="mt-1 text-sm text-destructive">{errors.password.message}</p>
+          <p id="reg-password-error" role="alert" className="mt-1 text-sm text-destructive">{errors.password.message}</p>
         )}
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p id="reg-password-hint" className="mt-1 text-xs text-muted-foreground">
           Min 8 characters, 1 uppercase, 1 number
         </p>
       </div>
@@ -130,6 +142,9 @@ export function RegisterForm() {
           type="text"
           id="orgName"
           placeholder="My Organization"
+          aria-required="true"
+          aria-invalid={!!errors.orgName}
+          aria-describedby={errors.orgName ? 'orgName-error' : undefined}
           className={cn(
             'mt-1 block w-full rounded-md border border-border bg-background px-3 py-2',
             'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',
@@ -137,7 +152,7 @@ export function RegisterForm() {
           )}
         />
         {errors.orgName && (
-          <p className="mt-1 text-sm text-destructive">{errors.orgName.message}</p>
+          <p id="orgName-error" role="alert" className="mt-1 text-sm text-destructive">{errors.orgName.message}</p>
         )}
       </div>
 

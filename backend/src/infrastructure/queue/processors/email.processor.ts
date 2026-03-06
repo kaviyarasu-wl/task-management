@@ -2,6 +2,9 @@ import { Job } from 'bullmq';
 import { EmailJobData } from '../queues';
 import { sendEmail, EmailAttachment } from '../../email/email.client';
 import { renderTemplate, EmailTemplate } from '../../email/templates';
+import { createLogger } from '@infrastructure/logger';
+
+const log = createLogger('EmailProcessor');
 
 /**
  * Email processor — processes email jobs from the queue.
@@ -10,7 +13,7 @@ import { renderTemplate, EmailTemplate } from '../../email/templates';
 export async function emailProcessor(job: Job<EmailJobData>): Promise<void> {
   const { to, subject, templateId, variables, attachment } = job.data;
 
-  console.log(`[EmailProcessor] Processing job ${job.id}: "${templateId}" to ${to}`);
+  log.info({ jobId: job.id, templateId, to }, 'Processing email job');
 
   // Validate template ID
   const validTemplates: EmailTemplate[] = [
@@ -48,5 +51,5 @@ export async function emailProcessor(job: Job<EmailJobData>): Promise<void> {
     attachments,
   });
 
-  console.log(`[EmailProcessor] Successfully sent "${templateId}" to ${to}${attachment ? ' (with attachment)' : ''}`);
+  log.info({ jobId: job.id, templateId, to, hasAttachment: !!attachment }, 'Email sent');
 }

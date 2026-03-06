@@ -1,0 +1,52 @@
+{
+  "title": "Configuración de la organización",
+  "failedToLoad": "Error al cargar la configuración de la organización",
+  "profile": {
+    "title": "Perfil",
+    "language": "Idioma",
+    "languageDescription": "Elige tu idioma de visualización preferido",
+    "theme": "Tema",
+    "notifications": "Preferencias de notificación"
+  },
+  "organization": {
+    "name": "Nombre de la organización",
+    "slug": "URL de la organización",
+    "created": "Creado {{date}}"
+  },
+  "configuration": {
+    "title": "Configuración",
+    "statuses": "Estados",
+    "statusesDescription": "Gestionar estados y categorías de tareas",
+    "workflow": "Flujo de trabajo",
+    "workflowDescription": "Configurar transiciones de estado y reglas",
+    "webhooks": "Webhooks",
+    "webhooksDescription": "Configurar integraciones de webhook salientes",
+    "integrations": "Integraciones",
+    "integrationsDescription": "Conectar Slack, GitHub, Jira y más",
+    "roles": "Roles y permisos",
+    "rolesDescription": "Gestionar roles personalizados y sus permisos",
+    "auditLog": "Registro de auditoría",
+    "auditLogDescription": "Ver actividad de usuarios e historial de cambios"
+  },
+  "usage": {
+    "title": "Uso",
+    "teamMembers": "Miembros del equipo",
+    "projects": "Proyectos"
+  },
+  "plan": {
+    "title": "Detalles del plan",
+    "current": "Plan actual",
+    "status": "Estado",
+    "orgId": "ID de la organización",
+    "limits": "Límites del plan",
+    "features": "Características incluidas",
+    "upgrade": "Actualiza a Pro o Enterprise para límites más altos y características avanzadas.",
+    "viewPlans": "Ver planes"
+  },
+  "danger": {
+    "title": "Zona de peligro",
+    "description": "Acciones irreversibles que afectan a toda tu organización",
+    "deleteOrg": "Eliminar organización",
+    "deleteOrgDisabled": "Esta función no está disponible. Contacta al soporte para asistencia."
+  }
+}

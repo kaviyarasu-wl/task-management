@@ -5,15 +5,24 @@ import { useAuthStore } from '../stores/authStore';
 import { authApi } from '../services/authApi';
 import type { LoginCredentials } from '../types/auth.types';
 import type { ApiError, UserRole } from '@/shared/types/api.types';
+import { ROUTES } from '@/shared/constants/routes';
 
 export function useLogin() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
+  const setMfaRequired = useAuthStore((state) => state.setMfaRequired);
 
   return useMutation({
     mutationFn: (credentials: LoginCredentials) => authApi.login(credentials),
     onSuccess: (response) => {
-      const { user, accessToken, refreshToken } = response.data;
+      const { requiresMfa, mfaToken, user, accessToken, refreshToken } = response.data;
+
+      if (requiresMfa && mfaToken) {
+        setMfaRequired(mfaToken);
+        navigate(ROUTES.MFA_VERIFY);
+        return;
+      }
+
       setAuth(
         {
           _id: user._id,
